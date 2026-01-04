@@ -1,0 +1,7 @@
+{
+  "name": "Common Ground",
+  "description": "A privacy-focused campus well-being platform where personal struggle meets shared strength. Features anonymous check-ins, real-time stress heatmaps, and silent study connection spaces.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
