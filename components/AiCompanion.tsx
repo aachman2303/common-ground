@@ -21,30 +21,36 @@ export const AiCompanion: React.FC = () => {
   if (!message || !visible) return null;
 
   return (
-    <div className="fixed bottom-24 left-4 right-4 z-50 animate-slide-up">
-       <div className="bg-slate-900/90 backdrop-blur text-white p-4 rounded-2xl shadow-2xl border border-slate-700 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-brand-400 to-indigo-500"></div>
-          <div className="flex items-start space-x-3">
-             <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-lg shadow-sm border border-white/20">
+    <div className="fixed bottom-24 left-0 right-0 z-50 flex justify-center pointer-events-none px-4">
+       <div className="bg-slate-800/95 backdrop-blur-md text-white p-3 pr-8 rounded-2xl shadow-xl border border-slate-700 w-full max-w-xs pointer-events-auto animate-slide-up relative ring-1 ring-white/10">
+          
+          {/* Close Button */}
+          <button 
+            onClick={() => setVisible(false)}
+            className="absolute top-2 right-2 text-slate-500 hover:text-white p-1.5 rounded-full hover:bg-slate-700 transition-colors"
+          >
+             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+          
+          <div className="flex items-start gap-3">
+             <div className="flex-shrink-0 w-8 h-8 rounded-xl bg-indigo-500/20 flex items-center justify-center text-lg border border-indigo-500/30 shadow-inner">
                 🤖
              </div>
-             <div className="flex-1">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Common Ground Companion</p>
-                <p className="text-sm font-medium leading-relaxed opacity-95">"{message}"</p>
+             <div>
+                <p className="text-[10px] font-bold text-indigo-300 uppercase tracking-wider mb-0.5">Companion</p>
+                <p className="text-xs font-medium leading-relaxed text-slate-200">{message}</p>
              </div>
-             <button 
-                onClick={() => setVisible(false)}
-                className="text-slate-500 hover:text-white transition-colors"
-             >
-                ✕
-             </button>
           </div>
-          <div className="mt-3 flex space-x-2">
-              <button className="flex-1 bg-white/10 hover:bg-white/20 py-1.5 rounded-lg text-xs font-bold transition-colors">
-                  I'm okay
+          
+          <div className="mt-2.5 flex gap-2 pl-11">
+              <button 
+                onClick={() => setVisible(false)} 
+                className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-[10px] font-bold transition-colors border border-slate-600"
+              >
+                  I'm good
               </button>
-              <button className="flex-1 bg-indigo-600 hover:bg-indigo-700 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-lg shadow-indigo-500/30">
-                  Actually, I'm stressed
+              <button className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-[10px] font-bold transition-colors shadow-lg shadow-indigo-900/40 border border-indigo-500">
+                  Stressed
               </button>
           </div>
        </div>
