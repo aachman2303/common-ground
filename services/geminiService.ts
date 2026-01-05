@@ -24,10 +24,8 @@ export const sendMessageToTutor = async (message: string, attachmentBase64?: str
   try {
     const session = getTutorSession();
     
-    // If there's an attachment, we can't use the simple session.sendMessage string overload easily with structure
-    // We will use the chat history to maintain context but for the immediate turn with image, we might need a direct model call 
-    // OR just use sendMessage with parts if the SDK supports it in chat.
-    // The @google/genai SDK chat.sendMessage supports parts.
+    // Construct the message content. 
+    // If there's an attachment, we send parts.
     
     let parts: any[] = [];
     if (attachmentBase64) {
@@ -42,8 +40,9 @@ export const sendMessageToTutor = async (message: string, attachmentBase64?: str
         parts.push({ text: message });
     }
 
+    // Correct method: sendMessage takes { message: ... }
     const response = await session.sendMessage({
-        content: { parts: parts }
+        message: parts
     });
 
     return response.text || "I analyzed the input but couldn't generate a text response.";
@@ -252,7 +251,7 @@ export const getPeerReply = async (userMessage: string, signalId: string): Promi
 export const analyzeSyllabusImage = async (base64Image: string): Promise<CalendarEvent[]> => {
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image', // Use vision model
+      model: 'gemini-3-flash-preview', // Use a model capable of vision tasks
       contents: {
         parts: [
           { inlineData: { data: base64Image, mimeType: 'image/png' } }, // Assuming PNG/JPEG
@@ -262,7 +261,10 @@ export const analyzeSyllabusImage = async (base64Image: string): Promise<Calenda
     });
 
     const text = response.text || "";
-    const jsonMatch = text.match(/\[.*\]/s);
+    // Clean potential markdown code blocks
+    const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    const jsonMatch = cleanText.match(/\[.*\]/s);
+    
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]);
       return parsed.map((item: any) => ({
