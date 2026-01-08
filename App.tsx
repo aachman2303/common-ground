@@ -1,6 +1,8 @@
+
 import React, { useState } from 'react';
 import { Layout } from './components/Layout';
 import { Onboarding } from './components/Onboarding';
+import { Login } from './components/Login';
 import { CheckIn } from './components/CheckIn';
 import { Heatmap } from './components/Heatmap';
 import { StudyRoom } from './components/StudyRoom';
@@ -21,6 +23,7 @@ const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewState>(ViewState.CHECK_IN);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [userMood, setUserMood] = useState<string | null>(null);
+  const [isLoginView, setIsLoginView] = useState(true); // Default to login view
 
   // Global State for "Enabled" Features
   const [events, setEvents] = useState<CalendarEvent[]>(MOCK_EVENTS);
@@ -42,6 +45,11 @@ const App: React.FC = () => {
     setCurrentView(ViewState.CHECK_IN);
   };
 
+  const handleLogin = (returningUser: UserProfile) => {
+    setUser(returningUser);
+    setCurrentView(ViewState.CHECK_IN);
+  };
+
   const handleAddEvent = (newEvent: CalendarEvent) => {
     setEvents([...events, newEvent]);
   };
@@ -56,6 +64,22 @@ const App: React.FC = () => {
     setCommunities([newCommunity, ...communities]);
   };
 
+  const handleSessionComplete = (minutes: number) => {
+    setUser(prev => {
+        if (!prev) return null;
+        const pointsEarned = Math.floor(minutes) + 10; // 1 pt per min + 10 base
+        return {
+            ...prev,
+            stats: {
+                ...prev.stats,
+                focusMinutes: prev.stats.focusMinutes + minutes,
+                sessionsCompleted: prev.stats.sessionsCompleted + 1,
+                communityPoints: prev.stats.communityPoints + pointsEarned
+            }
+        };
+    });
+  };
+
   const renderView = () => {
     switch (currentView) {
       case ViewState.CHECK_IN:
@@ -66,7 +90,7 @@ const App: React.FC = () => {
       case ViewState.HEATMAP:
         return <Heatmap onViewChange={setCurrentView} userSignal={userMood} />;
       case ViewState.STUDY_ROOM:
-        return <StudyRoom user={user} />;
+        return <StudyRoom user={user} onSessionComplete={handleSessionComplete} />;
       case ViewState.CALENDAR:
         return <CalendarView events={events} onAddEvent={handleAddEvent} />;
       case ViewState.RESOURCES:
@@ -90,9 +114,29 @@ const App: React.FC = () => {
     }
   };
 
-  // If user is not logged in, show Onboarding
+  // Auth Flow
   if (!user) {
-    return <Onboarding onComplete={handleOnboardingComplete} />;
+    if (isLoginView) {
+      return (
+        <Login 
+          onLogin={handleLogin} 
+          onSwitchToSignup={() => setIsLoginView(false)} 
+        />
+      );
+    } else {
+      return (
+        <div className="relative">
+          {/* Back button for onboarding */}
+          <button 
+            onClick={() => setIsLoginView(true)}
+            className="absolute top-4 left-4 z-50 text-stone-500 hover:text-stone-800 font-bold text-sm"
+          >
+            ← Back to Login
+          </button>
+          <Onboarding onComplete={handleOnboardingComplete} />
+        </div>
+      );
+    }
   }
 
   return (

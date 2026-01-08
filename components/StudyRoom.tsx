@@ -5,6 +5,7 @@ import { UserProfile } from '../types';
 
 interface StudyRoomProps {
   user: UserProfile | null;
+  onSessionComplete: (minutes: number) => void;
 }
 
 const AMBIENT_SOUNDS = [
@@ -13,7 +14,7 @@ const AMBIENT_SOUNDS = [
   { id: 'fire', label: 'Fire', icon: '🔥', url: 'https://assets.mixkit.co/active_storage/sfx/1330/1330-preview.mp3' },
 ];
 
-export const StudyRoom: React.FC<StudyRoomProps> = ({ user }) => {
+export const StudyRoom: React.FC<StudyRoomProps> = ({ user, onSessionComplete }) => {
   const [isActive, setIsActive] = useState(false);
   const [initialTime, setInitialTime] = useState(25 * 60);
   const [timeLeft, setTimeLeft] = useState(25 * 60);
@@ -25,6 +26,7 @@ export const StudyRoom: React.FC<StudyRoomProps> = ({ user }) => {
   const [isPlayingSound, setIsPlayingSound] = useState(false);
   const [volume, setVolume] = useState(0.5);
   const [selectedBadge, setSelectedBadge] = useState<string | null>(null);
+  const [sessionCompleted, setSessionCompleted] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Stats for badges
@@ -51,11 +53,15 @@ export const StudyRoom: React.FC<StudyRoomProps> = ({ user }) => {
       interval = setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
-    } else if (timeLeft === 0) {
+    } else if (timeLeft === 0 && isActive) {
       setIsActive(false);
+      onSessionComplete(initialTime / 60);
+      setSessionCompleted(true);
+      // Optional: Stop sound on complete
+      // if (audioRef.current) audioRef.current.pause();
     }
     return () => clearInterval(interval);
-  }, [isActive, timeLeft]);
+  }, [isActive, timeLeft, initialTime, onSessionComplete]);
 
   useEffect(() => {
     return () => {
@@ -150,8 +156,34 @@ export const StudyRoom: React.FC<StudyRoomProps> = ({ user }) => {
   };
 
   return (
-    <div className="space-y-6 flex flex-col min-h-full animate-appear">
+    <div className="space-y-6 flex flex-col min-h-full animate-appear relative">
       
+      {/* Session Completed Overlay */}
+      {sessionCompleted && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm rounded-3xl animate-fade-in">
+           <div className="bg-white p-8 rounded-3xl shadow-2xl border border-brand-100 text-center max-w-xs mx-4 animate-pop">
+              <div className="text-5xl mb-4">🎉</div>
+              <h3 className="text-2xl font-serif font-bold text-brand-800 mb-2">Session Complete!</h3>
+              <p className="text-stone-600 mb-4">
+                You focused for <span className="font-bold text-brand-600">{initialTime / 60} minutes</span>.
+              </p>
+              <div className="bg-brand-50 p-3 rounded-xl mb-6 border border-brand-100">
+                 <p className="text-xs text-brand-500 font-bold uppercase tracking-wider">Rewards</p>
+                 <p className="font-bold text-brand-700 text-lg">+{Math.floor(initialTime / 60) + 10} Points</p>
+              </div>
+              <button 
+                onClick={() => {
+                  setSessionCompleted(false);
+                  resetTimer();
+                }}
+                className="w-full py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 transition-colors shadow-lg shadow-brand-200"
+              >
+                Continue
+              </button>
+           </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="text-center space-y-1">
         <h2 className="text-lg font-serif font-bold text-stone-700">Sanctuary of Focus</h2>
