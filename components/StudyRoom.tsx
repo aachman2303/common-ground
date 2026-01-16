@@ -188,9 +188,14 @@ export const StudyRoom: React.FC<StudyRoomProps> = ({ user, onSessionComplete })
       {/* Header */}
       <div className="text-center space-y-1">
         <h2 className="text-lg font-serif font-bold text-stone-700">Sanctuary of Focus</h2>
-        <div className="inline-flex items-center space-x-2 bg-white px-3 py-1 rounded-full shadow-sm border border-stone-100">
-          <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
-          <span className="text-xs font-bold text-stone-500 uppercase tracking-wide">8 Present</span>
+        <div className="flex justify-center items-center space-x-3">
+            <div className="inline-flex items-center space-x-2 bg-white px-3 py-1 rounded-full shadow-sm border border-stone-100">
+                <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
+                <span className="text-xs font-bold text-stone-500 uppercase tracking-wide">8 Present</span>
+            </div>
+            <div className="inline-flex items-center space-x-1 px-2 py-0.5 rounded border border-yellow-100 bg-yellow-50">
+                 <span className="text-[9px] font-bold text-yellow-600 uppercase">Powered by Google Meet API</span>
+            </div>
         </div>
       </div>
 

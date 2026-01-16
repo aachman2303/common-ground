@@ -89,7 +89,13 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ events, onAddEvent }
     <div className="space-y-6">
       {/* Header & Controls */}
       <div className="flex items-center justify-between">
-         <h2 className="text-xl font-bold font-serif text-stone-800">Schedule</h2>
+         <div>
+            <h2 className="text-xl font-bold font-serif text-stone-800">Schedule</h2>
+            <div className="flex items-center space-x-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                <p className="text-[9px] font-bold text-blue-600 uppercase tracking-wide">Synced with Calendar API</p>
+            </div>
+         </div>
          <div className="flex bg-stone-100 rounded-lg p-1">
              <button 
                 onClick={() => setViewMode('day')}

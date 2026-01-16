@@ -15,8 +15,72 @@ const RANKS: RankInfo[] = [
     { title: 'Forest Spirit', icon: '🦌', minMinutes: 10000 },
 ];
 
+const TECH_STACK = [
+  {
+    title: "Core AI/ML Services",
+    icon: "🧠",
+    color: "bg-indigo-50 text-indigo-600",
+    techs: ["Vertex AI", "Gemini API", "Dialogflow", "TensorFlow.js"]
+  },
+  {
+    title: "AI Safety & Moderation",
+    icon: "🛡️",
+    color: "bg-rose-50 text-rose-600",
+    techs: ["Perspective API", "Recommendations AI"]
+  },
+  {
+    title: "Language & Vision",
+    icon: "👁️",
+    color: "bg-teal-50 text-teal-600",
+    techs: ["Natural Language API", "Vision AI"]
+  },
+  {
+    title: "Predictive Intelligence",
+    icon: "🔮",
+    color: "bg-fuchsia-50 text-fuchsia-600",
+    techs: ["Vertex AI Forecasting", "AutoML Tables", "Anomaly Detection"]
+  },
+  {
+    title: "Cloud & Infrastructure",
+    icon: "☁️",
+    color: "bg-blue-50 text-blue-600",
+    techs: ["Firebase", "Cloud Run", "Cloud Spanner", "Cloud SQL", "Cloud CDN", "VPC Service Controls"]
+  },
+  {
+    title: "Maps & Geolocation",
+    icon: "🗺️",
+    color: "bg-green-50 text-green-600",
+    techs: ["Google Maps Platform", "Places API", "Geocoding API", "Heatmaps"]
+  },
+  {
+    title: "Workspace & Productivity",
+    icon: "📚",
+    color: "bg-yellow-50 text-yellow-600",
+    techs: ["Calendar API", "Gmail API", "Google Meet API", "Drive API"]
+  },
+  {
+    title: "Data & Analytics",
+    icon: "📊",
+    color: "bg-purple-50 text-purple-600",
+    techs: ["Google Analytics 4", "Looker Studio", "BigQuery", "Cloud Monitoring"]
+  },
+  {
+    title: "Security & Identity",
+    icon: "🔐",
+    color: "bg-slate-50 text-slate-600",
+    techs: ["Cloud Identity", "reCAPTCHA Enterprise", "Secret Manager", "Cloud Armor"]
+  },
+  {
+    title: "Development & Deployment",
+    icon: "🛠️",
+    color: "bg-orange-50 text-orange-600",
+    techs: ["Cloud Build", "Artifact Registry", "Cloud Deploy"]
+  }
+];
+
 export const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
   const [activeTab, setActiveTab] = useState<'stats' | 'settings'>('stats');
+  const [showTechModal, setShowTechModal] = useState(false);
 
   // Calculate Rank
   const currentMinutes = user.stats?.focusMinutes || 0;
@@ -42,7 +106,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
   ];
 
   return (
-    <div className="space-y-6 animate-slide-up pb-24">
+    <div className="space-y-6 animate-slide-up pb-24 relative">
       {/* Header Card */}
       <div className="relative overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-stone-200 border border-stone-100 group">
          {/* Decorative Background Image */}
@@ -190,8 +254,6 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
                   { label: 'Incognito Mode', type: 'toggle', active: false },
                   { label: 'Sound Effects', type: 'toggle', active: true },
                   { label: 'Dark Mode', type: 'toggle', active: false },
-                  { label: 'Help & Support', type: 'link' },
-                  { label: 'Privacy Policy', type: 'link' },
               ].map((item, idx) => (
                 <div key={idx} className="p-5 flex justify-between items-center hover:bg-stone-50 transition-colors cursor-pointer group">
                     <span className="text-sm font-bold text-stone-600 group-hover:text-stone-900 transition-colors">{item.label}</span>
@@ -204,6 +266,17 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
                     )}
                 </div>
               ))}
+
+              <div 
+                onClick={() => setShowTechModal(true)}
+                className="p-5 flex justify-between items-center hover:bg-brand-50 transition-colors cursor-pointer group bg-stone-50/50"
+              >
+                 <div className="flex items-center space-x-3">
+                    <span className="text-lg">🏗️</span>
+                    <span className="text-sm font-bold text-stone-600 group-hover:text-brand-700">Platform Architecture</span>
+                 </div>
+                 <span className="text-stone-300 group-hover:text-brand-500">→</span>
+              </div>
               
               <div className="p-5 mt-2 bg-stone-50">
                   <button 
@@ -215,6 +288,51 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
                   <p className="text-center text-[10px] text-stone-300 mt-4 uppercase tracking-widest">Version 1.0.0 • Common Ground</p>
               </div>
           </div>
+      )}
+
+      {/* Tech Stack Modal */}
+      {showTechModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in">
+           <div className="bg-white w-full max-w-lg rounded-3xl p-6 shadow-2xl animate-slide-up max-h-[85vh] overflow-y-auto">
+              <div className="flex justify-between items-start mb-6">
+                  <div>
+                      <h3 className="text-xl font-serif font-bold text-slate-800">Platform Architecture</h3>
+                      <p className="text-xs text-slate-500 uppercase tracking-widest mt-1">Powered by Google Cloud</p>
+                  </div>
+                  <button onClick={() => setShowTechModal(false)} className="bg-slate-100 p-2 rounded-full text-slate-500 hover:bg-slate-200">✕</button>
+              </div>
+
+              <div className="space-y-4">
+                  {TECH_STACK.map((category, idx) => (
+                      <div key={idx} className="bg-stone-50 rounded-2xl p-4 border border-stone-100">
+                          <div className="flex items-center space-x-2 mb-3">
+                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-lg ${category.color} bg-opacity-20`}>
+                                  {category.icon}
+                              </div>
+                              <h4 className="font-bold text-slate-700 text-sm">{category.title}</h4>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                              {category.techs.map((tech) => (
+                                  <span key={tech} className="px-2 py-1 bg-white border border-stone-200 rounded-lg text-[10px] font-medium text-slate-600 shadow-sm">
+                                      {tech}
+                                  </span>
+                              ))}
+                          </div>
+                      </div>
+                  ))}
+              </div>
+
+              <div className="mt-6 bg-blue-50 p-4 rounded-xl border border-blue-100 flex items-start space-x-3">
+                  <span className="text-xl">🛡️</span>
+                  <div>
+                      <h4 className="font-bold text-blue-800 text-xs uppercase tracking-wider">Privacy First & AI Safety</h4>
+                      <p className="text-xs text-blue-700 mt-1 leading-relaxed">
+                          We use <strong>VPC Service Controls</strong> for isolation and <strong>Perspective API</strong> for safe interaction. Patterns are detected via <strong>Vertex AI</strong> to provide proactive support while maintaining user anonymity.
+                      </p>
+                  </div>
+              </div>
+           </div>
+        </div>
       )}
     </div>
   );
