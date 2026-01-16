@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import { MOCK_EVENTS, AVATARS, CHECK_IN_OPTIONS } from '../constants';
 import { CalendarEvent } from '../types';
 
@@ -251,34 +251,44 @@ export const getPeerReply = async (userMessage: string, signalId: string): Promi
 export const analyzeSyllabusImage = async (base64Image: string): Promise<CalendarEvent[]> => {
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview', // Use a model capable of vision tasks
+      model: 'gemini-3-flash-preview',
       contents: {
         parts: [
-          { inlineData: { data: base64Image, mimeType: 'image/png' } }, // Assuming PNG/JPEG
-          { text: "Analyze this document/syllabus image. Extract upcoming assignments and exams. Return a JSON array of objects with keys: title, date (YYYY-MM-DD), time (HH:MM), type ('academic' | 'social'). Assume current year." }
+          { inlineData: { data: base64Image, mimeType: 'image/png' } },
+          { text: "Analyze this document/syllabus image. Extract upcoming assignments, exams, and key dates. Return a JSON array." }
         ]
       },
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              title: { type: Type.STRING },
+              date: { type: Type.STRING, description: "YYYY-MM-DD" },
+              time: { type: Type.STRING, description: "HH:MM (24-hour)" },
+              type: { type: Type.STRING, enum: ['academic', 'social', 'wellness'] }
+            },
+            required: ['title', 'date', 'type']
+          }
+        }
+      }
     });
 
-    const text = response.text || "";
-    // Clean potential markdown code blocks
-    const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
-    const jsonMatch = cleanText.match(/\[.*\]/s);
-    
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
-      return parsed.map((item: any) => ({
-        id: Date.now().toString() + Math.random(),
-        title: item.title,
-        time: item.time || "12:00",
-        date: item.date,
-        duration: 60,
-        type: 'academic',
-        attendees: [0],
-        color: 'bg-red-100 border-red-200'
-      }));
-    }
-    return [];
+    const jsonStr = response.text || "[]";
+    const parsed = JSON.parse(jsonStr);
+
+    return parsed.map((item: any) => ({
+      id: Date.now().toString() + Math.random(),
+      title: item.title,
+      time: item.time || "12:00",
+      date: item.date,
+      duration: 60,
+      type: item.type || 'academic',
+      attendees: [0], // Default user
+      color: item.type === 'wellness' ? 'bg-orange-100 border-orange-200' : (item.type === 'social' ? 'bg-green-100 border-green-200' : 'bg-red-100 border-red-200')
+    }));
   } catch (error) {
     console.error("Syllabus analysis failed", error);
     return [{

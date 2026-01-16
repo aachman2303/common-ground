@@ -6,9 +6,10 @@ import { CalendarEvent } from '../types';
 interface CalendarViewProps {
   events: CalendarEvent[];
   onAddEvent: (event: CalendarEvent) => void;
+  onJoinStudyChat: () => void;
 }
 
-export const CalendarView: React.FC<CalendarViewProps> = ({ events, onAddEvent }) => {
+export const CalendarView: React.FC<CalendarViewProps> = ({ events, onAddEvent, onJoinStudyChat }) => {
   const [viewMode, setViewMode] = useState<'day' | 'month'>('day');
   const [analyzing, setAnalyzing] = useState(false);
   const [insight, setInsight] = useState<{ title: string; insight: string } | null>(null);
@@ -16,6 +17,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ events, onAddEvent }
   // File Upload State
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
 
   // Modal State
   const [showAddModal, setShowAddModal] = useState(false);
@@ -33,22 +35,24 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ events, onAddEvent }
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
-      if (file.size > 2 * 1024 * 1024) {
-          alert("File too large. Please upload < 2MB.");
+      if (file.size > 5 * 1024 * 1024) {
+          alert("File too large. Please upload < 5MB.");
           return;
       }
 
       setUploading(true);
+      setUploadSuccess(false);
       const reader = new FileReader();
       reader.onloadend = async () => {
           const base64 = reader.result as string;
           const content = base64.split(',')[1]; // Remove data:image/...;base64, prefix
           
           try {
-             // Simulate or Call AI Service
              const newEvents = await analyzeSyllabusImage(content);
              newEvents.forEach(ev => onAddEvent(ev));
+             setUploadSuccess(true);
              setViewMode('month'); // Switch to month view to see results
+             setTimeout(() => setUploadSuccess(false), 5000);
           } catch (err) {
               console.error(err);
               alert("Could not analyze document.");
@@ -82,7 +86,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ events, onAddEvent }
 
   const sortedEvents = [...events].sort((a, b) => a.time.localeCompare(b.time));
 
-  // Mock Days for Month View
+  // Mock Days for Month View - Simplified logic
   const daysInMonth = Array.from({ length: 30 }, (_, i) => i + 1);
 
   return (
@@ -113,12 +117,17 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ events, onAddEvent }
       </div>
 
       {/* AI Document Upload */}
-      <div className="bg-brand-50 border-2 border-dashed border-brand-200 rounded-xl p-4 text-center cursor-pointer hover:bg-brand-100 transition-colors relative overflow-hidden" onClick={() => fileInputRef.current?.click()}>
+      <div 
+        className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all relative overflow-hidden group ${
+            uploadSuccess ? 'bg-green-50 border-green-200' : 'bg-brand-50 border-brand-200 hover:bg-brand-100'
+        }`} 
+        onClick={() => !uploading && fileInputRef.current?.click()}
+      >
           <input 
              type="file" 
              ref={fileInputRef} 
              className="hidden" 
-             accept="image/*,.pdf" // Accepting images for demo, PDF assumes native capability
+             accept="image/*"
              onChange={handleFileUpload}
           />
           {uploading ? (
@@ -126,17 +135,23 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ events, onAddEvent }
                 <span className="text-2xl mb-1">🧠</span>
                 <span className="text-xs font-bold text-brand-700">AI Analyzing Syllabus...</span>
              </div>
+          ) : uploadSuccess ? (
+             <div className="flex flex-col items-center justify-center py-2 animate-pop">
+                 <span className="text-2xl mb-1">✅</span>
+                 <span className="text-xs font-bold text-green-700">Schedule Updated!</span>
+                 <span className="text-[9px] text-green-600 mt-1">Events plotted successfully</span>
+             </div>
           ) : (
              <div className="flex flex-col items-center justify-center py-2">
-                <span className="text-2xl mb-1">📄</span>
+                <span className="text-2xl mb-1 group-hover:scale-110 transition-transform">📄</span>
                 <span className="text-xs font-bold text-brand-700">Upload Syllabus / Schedule</span>
-                <span className="text-[9px] text-brand-500 mt-1">AI will extract dates automatically (Max 2MB)</span>
+                <span className="text-[9px] text-brand-500 mt-1">AI will extract dates automatically</span>
              </div>
           )}
       </div>
 
       {viewMode === 'day' && (
-        <div className="space-y-6 animate-fade-in">
+        <div className="space-y-6 animate-fade-in pb-20">
             {/* Analysis Card */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden relative transition-all duration-300 hover:shadow-md">
                 <div className="p-5">
@@ -168,7 +183,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ events, onAddEvent }
             </div>
 
             {/* Timeline */}
-            <div className="relative pl-4 space-y-4 pb-20">
+            <div className="relative pl-4 space-y-4">
                 <div className="absolute left-[23px] top-2 bottom-0 w-0.5 bg-slate-100"></div>
                 {sortedEvents.map((event, index) => (
                 <div key={event.id} className="relative flex items-start space-x-4 animate-appear" style={{ animationDelay: `${index * 0.1}s` }}>
@@ -181,11 +196,14 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ events, onAddEvent }
                             <h3 className="font-bold text-slate-800 text-sm">{event.title}</h3>
                             <span className="text-[10px] uppercase font-bold tracking-wider opacity-60">{event.type}</span>
                         </div>
-                        {/* Similar Stress / Chat Button */}
+                        {/* Functional Chat Button */}
                         {event.type === 'academic' && (
-                             <button className="mt-2 w-full py-2 bg-white/50 hover:bg-white text-slate-700 text-xs font-bold rounded-lg transition-colors flex items-center justify-center space-x-2 border border-black/5">
+                             <button 
+                                onClick={onJoinStudyChat}
+                                className="mt-2 w-full py-2 bg-white/60 hover:bg-white text-slate-700 text-xs font-bold rounded-lg transition-colors flex items-center justify-center space-x-2 border border-black/5"
+                             >
                                  <span>💬</span>
-                                 <span>Find Study Buddy</span>
+                                 <span>Find Study Buddy ({event.attendees.length + 2} online)</span>
                              </button>
                         )}
                         <div className="flex -space-x-2 overflow-hidden py-1 pl-1 mt-2">
@@ -214,27 +232,59 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ events, onAddEvent }
               </div>
               <div className="grid grid-cols-7 gap-2">
                   {daysInMonth.map(day => {
-                      const isStress = day === 15 || day === 22; // Mock AI Prediction
-                      const hasEvent = events.length > 0 && day % 3 === 0; // Mock events
+                      // Simulating stress weeks (Week 3 of month roughly)
+                      const isStress = day >= 15 && day <= 22; 
+                      const isWeekend = day % 7 === 0 || day % 7 === 6;
+                      const hasEvent = events.length > 0 && day % 3 === 0; 
+                      
                       return (
-                          <div key={day} className={`aspect-square rounded-xl flex flex-col items-center justify-center relative border transition-all ${isStress ? 'bg-red-50 border-red-200' : 'bg-white border-slate-100'}`}>
-                              <span className={`text-xs font-bold ${isStress ? 'text-red-500' : 'text-slate-600'}`}>{day}</span>
+                          <div 
+                            key={day} 
+                            className={`aspect-square rounded-xl flex flex-col items-center justify-center relative border transition-all 
+                                ${isStress ? 'bg-red-50 border-red-200 shadow-inner' : 'bg-white border-slate-100'}
+                                ${hasEvent && !isStress ? 'hover:border-brand-300' : ''}
+                            `}
+                          >
+                              <span className={`text-xs font-bold ${isStress ? 'text-red-500' : (isWeekend ? 'text-stone-300' : 'text-slate-600')}`}>
+                                  {day}
+                              </span>
+                              
                               {hasEvent && <div className="w-1.5 h-1.5 bg-brand-500 rounded-full mt-1"></div>}
+                              
                               {isStress && (
-                                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border border-white"></div>
+                                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border border-white animate-pulse"></div>
                               )}
                           </div>
                       );
                   })}
               </div>
-              <div className="mt-6 bg-red-50 p-4 rounded-xl border border-red-100 flex items-start space-x-3">
-                  <span className="text-2xl">⚡</span>
-                  <div>
-                      <h3 className="font-bold text-red-800 text-sm">AI Stress Prediction</h3>
-                      <p className="text-xs text-red-600 mt-1">
-                          Based on syllabus analysis, the 3rd week looks heavy for Computer Science students. 
-                          <span className="font-bold underline ml-1 cursor-pointer">Join the 'Crunch Time' chat?</span>
-                      </p>
+              
+              <div className="mt-6 space-y-3">
+                  <div className="bg-red-50 p-4 rounded-xl border border-red-100 flex items-start space-x-3 shadow-sm">
+                    <span className="text-2xl">⚡</span>
+                    <div>
+                        <h3 className="font-bold text-red-800 text-sm">Peak Stress Forecast</h3>
+                        <p className="text-xs text-red-600 mt-1 leading-relaxed">
+                            Based on your syllabus, <span className="font-bold">May 15-22</span> is heavy. 
+                            312 other students also have deadlines then.
+                        </p>
+                        <button 
+                            onClick={onJoinStudyChat}
+                            className="mt-2 text-xs font-bold bg-white text-red-600 px-3 py-1.5 rounded-lg border border-red-100 hover:bg-red-100 transition-colors shadow-sm"
+                        >
+                            Join 'Crunch Time' Group Chat →
+                        </button>
+                    </div>
+                  </div>
+
+                  <div className="bg-green-50 p-4 rounded-xl border border-green-100 flex items-start space-x-3 shadow-sm">
+                    <span className="text-2xl">🧘</span>
+                    <div>
+                        <h3 className="font-bold text-green-800 text-sm">Recovery Week</h3>
+                        <p className="text-xs text-green-600 mt-1">
+                            The last week looks lighter. Good time to schedule social events?
+                        </p>
+                    </div>
                   </div>
               </div>
           </div>

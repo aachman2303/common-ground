@@ -92,7 +92,14 @@ const App: React.FC = () => {
       case ViewState.STUDY_ROOM:
         return <StudyRoom user={user} onSessionComplete={handleSessionComplete} />;
       case ViewState.CALENDAR:
-        return <CalendarView events={events} onAddEvent={handleAddEvent} />;
+        return <CalendarView 
+          events={events} 
+          onAddEvent={handleAddEvent} 
+          onJoinStudyChat={() => {
+            setUserMood('heavy_load'); // Contextual mood
+            setCurrentView(ViewState.PULSE_CHAT);
+          }}
+        />;
       case ViewState.RESOURCES:
         return <Resources userMood={userMood} />;
       case ViewState.CHAT:
