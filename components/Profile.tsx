@@ -7,26 +7,19 @@ interface ProfileProps {
   onLogout: () => void;
 }
 
-const BADGES = [
-    { id: 1, icon: '🌙', name: 'Night Owl', desc: 'Checked in after midnight' },
-    { id: 2, icon: '🔥', name: 'Streak', desc: '3 Day Streak' },
-    { id: 3, icon: '🤝', name: 'Community', desc: 'Joined 2 Communities' },
-    { id: 4, icon: '🧘', name: 'Zen Master', desc: 'Used Calm Mode' },
-    { id: 5, icon: '👂', name: 'Listener', desc: 'Helped 5 Peers' },
-];
-
 const RANKS: RankInfo[] = [
     { title: 'Seedling', icon: '🌱', minMinutes: 0 },
     { title: 'Sapling', icon: '🌿', minMinutes: 300 },
     { title: 'Young Tree', icon: '🌳', minMinutes: 1000 },
     { title: 'Ancient Oak', icon: '🌲', minMinutes: 5000 },
+    { title: 'Forest Spirit', icon: '🦌', minMinutes: 10000 },
 ];
 
 export const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
   const [activeTab, setActiveTab] = useState<'stats' | 'settings'>('stats');
 
   // Calculate Rank
-  const currentMinutes = user.stats?.focusMinutes || 750; // Default mock if missing
+  const currentMinutes = user.stats?.focusMinutes || 0;
   const currentRankIndex = RANKS.findIndex((r, i) => 
     currentMinutes >= r.minMinutes && (!RANKS[i+1] || currentMinutes < RANKS[i+1].minMinutes)
   );
@@ -34,151 +27,192 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
   const nextRank = RANKS[currentRankIndex + 1];
   
   const progressToNext = nextRank 
-    ? ((currentMinutes - currentRank.minMinutes) / (nextRank.minMinutes - currentRank.minMinutes)) * 100
+    ? Math.min(100, Math.max(0, ((currentMinutes - currentRank.minMinutes) / (nextRank.minMinutes - currentRank.minMinutes)) * 100))
     : 100;
 
+  // Derive Badges from Stats
+  const stats = user.stats || { focusMinutes: 0, streakDays: 0, communitiesJoined: 0, sessionsCompleted: 0 };
+  const ALL_BADGES = [
+    { id: 'streak', icon: '🔥', label: 'Streak Master', desc: '3+ Day Streak', unlocked: stats.streakDays >= 3 },
+    { id: 'focus', icon: '🧠', label: 'Deep Focus', desc: '120+ Mins Total', unlocked: stats.focusMinutes >= 120 },
+    { id: 'social', icon: '🤝', label: 'Community Pillar', desc: 'Joined 2+ Groups', unlocked: stats.communitiesJoined >= 2 },
+    { id: 'night', icon: '🌙', label: 'Night Owl', desc: '5+ Sessions', unlocked: stats.sessionsCompleted >= 5 },
+    { id: 'zen', icon: '🧘', label: 'Zen Master', desc: '500+ Mins Total', unlocked: stats.focusMinutes >= 500 },
+    { id: 'sage', icon: '🦉', label: 'Campus Sage', desc: '1000+ Mins Total', unlocked: stats.focusMinutes >= 1000 },
+  ];
+
   return (
-    <div className="space-y-6 animate-slide-up">
+    <div className="space-y-6 animate-slide-up pb-24">
       {/* Header Card */}
-      <div className="relative overflow-hidden rounded-3xl bg-white shadow-soft border border-stone-100 group">
+      <div className="relative overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-stone-200 border border-stone-100 group">
          {/* Decorative Background Image */}
-         <div className="absolute inset-0 h-32 bg-stone-200">
+         <div className="absolute inset-0 h-40">
              <img 
-               src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
-               alt="Calm Background" 
-               className="w-full h-full object-cover opacity-80"
+               src="https://images.unsplash.com/photo-1490750967868-58cb75069ed6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+               alt="Cozy Plant Background" 
+               className="w-full h-full object-cover opacity-90 transition-transform duration-1000 group-hover:scale-105"
              />
-             <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/90"></div>
+             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/60 to-white"></div>
          </div>
 
-         <div className="relative pt-16 px-6 pb-6 text-center">
-             <div className="relative inline-block">
-                <div className="w-24 h-24 rounded-full bg-white border-4 border-white shadow-xl flex items-center justify-center text-4xl animate-float">
+         <div className="relative pt-24 px-6 pb-8 text-center">
+             <div className="relative inline-block mb-3">
+                <div className="w-28 h-28 rounded-full bg-white border-4 border-white shadow-2xl flex items-center justify-center text-5xl animate-float relative z-10">
                     {AVATARS[user.avatarId].icon}
                 </div>
-                <div className="absolute bottom-1 right-1 w-6 h-6 bg-brand-500 rounded-full border-2 border-white flex items-center justify-center text-[10px] text-white font-bold" title="Online">
+                <div className="absolute bottom-2 right-2 w-7 h-7 bg-brand-500 rounded-full border-4 border-white flex items-center justify-center text-[10px] text-white font-bold z-20 shadow-sm" title="Online">
                     ✓
                 </div>
              </div>
              
-             <h2 className="mt-3 text-2xl font-serif font-bold text-stone-800">{user.nickname}</h2>
-             <p className="text-sm text-stone-500 font-mono tracking-wide mb-3">{user.uniqueId}</p>
+             <h2 className="text-3xl font-serif font-bold text-stone-800 tracking-tight">{user.nickname}</h2>
+             <p className="text-sm text-stone-400 font-mono tracking-wider mb-6 bg-stone-50 inline-block px-3 py-1 rounded-full mt-2 border border-stone-100">{user.uniqueId}</p>
              
              {/* Rank Display */}
-             <div className="bg-stone-50 rounded-xl p-3 border border-stone-100 inline-block w-full max-w-xs">
-                <div className="flex justify-between items-center text-xs font-bold mb-1">
-                    <span className="text-brand-700 flex items-center gap-1">
-                        {currentRank.icon} {currentRank.title}
+             <div className="bg-white/80 backdrop-blur-md rounded-2xl p-4 border border-stone-100 shadow-sm w-full">
+                <div className="flex justify-between items-center text-sm font-bold mb-2">
+                    <span className="text-brand-700 flex items-center gap-2">
+                        <span className="text-xl">{currentRank.icon}</span> {currentRank.title}
                     </span>
-                    {nextRank && <span className="text-stone-400">{nextRank.title}</span>}
+                    {nextRank && (
+                        <span className="text-stone-400 text-xs uppercase tracking-wider">Next: {nextRank.title}</span>
+                    )}
                 </div>
-                <div className="w-full h-2 bg-stone-200 rounded-full overflow-hidden">
+                <div className="relative w-full h-3 bg-stone-100 rounded-full overflow-hidden shadow-inner">
                     <div 
-                        className="h-full bg-brand-500 rounded-full transition-all duration-1000 ease-out"
+                        className="absolute top-0 left-0 h-full bg-gradient-to-r from-brand-400 to-brand-600 rounded-full transition-all duration-1000 ease-out"
                         style={{ width: `${progressToNext}%` }}
-                    ></div>
+                    >
+                         <div className="absolute inset-0 bg-white/30 animate-[shimmer_2s_infinite]"></div>
+                    </div>
                 </div>
-                <div className="text-[10px] text-stone-400 mt-1 text-right">
-                    {currentMinutes} / {nextRank ? nextRank.minMinutes : 'MAX'} min focus
+                <div className="flex justify-between mt-2 text-[10px] font-bold text-stone-400 uppercase tracking-widest">
+                    <span>{currentMinutes} mins</span>
+                    <span>{nextRank ? nextRank.minMinutes : 'MAX'} mins</span>
                 </div>
              </div>
          </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex bg-stone-100 p-1 rounded-2xl">
+      <div className="flex bg-stone-200/50 p-1.5 rounded-2xl backdrop-blur-sm">
           <button 
              onClick={() => setActiveTab('stats')}
-             className={`flex-1 py-2 text-sm font-bold rounded-xl transition-all ${activeTab === 'stats' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-400'}`}
+             className={`flex-1 py-3 text-xs font-bold rounded-xl transition-all duration-300 ${activeTab === 'stats' ? 'bg-white text-stone-800 shadow-md transform scale-100' : 'text-stone-500 hover:text-stone-600 scale-95'}`}
           >
-              My Journey
+              Journey & Badges
           </button>
           <button 
              onClick={() => setActiveTab('settings')}
-             className={`flex-1 py-2 text-sm font-bold rounded-xl transition-all ${activeTab === 'settings' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-400'}`}
+             className={`flex-1 py-3 text-xs font-bold rounded-xl transition-all duration-300 ${activeTab === 'settings' ? 'bg-white text-stone-800 shadow-md transform scale-100' : 'text-stone-500 hover:text-stone-600 scale-95'}`}
           >
               Settings
           </button>
       </div>
 
       {activeTab === 'stats' && (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-fade-in">
               {/* Stats Grid */}
               <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white p-4 rounded-2xl border border-stone-100 shadow-sm animate-pop delay-100 hover:scale-[1.02] transition-transform">
-                      <div className="text-brand-500 text-2xl mb-1">⏳</div>
+                  <div className="bg-white p-5 rounded-2xl border border-stone-100 shadow-sm hover:shadow-md transition-all group">
+                      <div className="w-10 h-10 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">⏳</div>
                       <div className="text-2xl font-bold text-stone-800 font-serif">{(currentMinutes / 60).toFixed(1)}h</div>
-                      <div className="text-xs text-stone-400 uppercase tracking-wider font-bold">Focus Time</div>
+                      <div className="text-[10px] text-stone-400 uppercase tracking-widest font-bold mt-1">Focus Time</div>
                   </div>
-                  <div className="bg-white p-4 rounded-2xl border border-stone-100 shadow-sm animate-pop delay-200 hover:scale-[1.02] transition-transform">
-                      <div className="text-calm-red text-2xl mb-1">✨</div>
+                  <div className="bg-white p-5 rounded-2xl border border-stone-100 shadow-sm hover:shadow-md transition-all group">
+                      <div className="w-10 h-10 rounded-full bg-yellow-50 text-yellow-600 flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">✨</div>
                       <div className="text-2xl font-bold text-stone-800 font-serif">{user.stats?.communityPoints || 0}</div>
-                      <div className="text-xs text-stone-400 uppercase tracking-wider font-bold">Community Pts</div>
+                      <div className="text-[10px] text-stone-400 uppercase tracking-widest font-bold mt-1">Karma Points</div>
                   </div>
-                  <div className="col-span-2 bg-white p-4 rounded-2xl border border-stone-100 shadow-sm animate-pop delay-300">
+                  <div className="col-span-2 bg-gradient-to-r from-orange-50 to-red-50 p-5 rounded-2xl border border-orange-100 shadow-sm">
                       <div className="flex items-center justify-between">
-                         <div>
-                            <div className="text-cozy-rust text-xl mb-1">🔥</div>
-                            <div className="text-lg font-bold text-stone-800 font-serif">{user.stats?.streakDays || 0} Day Streak</div>
-                         </div>
-                         <div className="text-right">
-                            <div className="text-xs text-stone-400 font-bold uppercase">Consistency</div>
+                         <div className="flex items-center gap-4">
+                            <div className="text-3xl animate-pulse">🔥</div>
+                            <div>
+                                <div className="text-xl font-bold text-stone-800 font-serif">{user.stats?.streakDays || 0} Day Streak</div>
+                                <div className="text-[10px] text-orange-600/70 font-bold uppercase tracking-widest">Consistency is key</div>
+                            </div>
                          </div>
                       </div>
                   </div>
               </div>
 
-              {/* Badges */}
+              {/* Badges Section */}
               <div>
-                  <h3 className="text-sm font-bold text-stone-400 uppercase tracking-wider mb-3 px-1">Recent Badges</h3>
-                  <div className="grid grid-cols-5 gap-2">
-                      {BADGES.map((badge, i) => (
-                          <div key={badge.id} className={`flex flex-col items-center p-2 rounded-xl bg-white border border-stone-100 shadow-sm animate-pop`} style={{ animationDelay: `${(i+3) * 100}ms` }}>
-                              <div className="text-xl mb-1 filter drop-shadow-sm transform hover:scale-125 transition-transform duration-300 cursor-default" title={badge.desc}>
-                                  {badge.icon}
-                              </div>
-                              <span className="text-[8px] font-bold text-stone-600 text-center leading-tight">{badge.name}</span>
+                  <div className="flex items-center justify-between px-2 mb-3">
+                      <h3 className="text-xs font-bold text-stone-400 uppercase tracking-widest">Achievements</h3>
+                      <span className="text-[10px] bg-stone-100 text-stone-500 px-2 py-0.5 rounded-full font-bold">
+                          {ALL_BADGES.filter(b => b.unlocked).length}/{ALL_BADGES.length}
+                      </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                      {ALL_BADGES.map((badge, i) => (
+                          <div 
+                            key={badge.id} 
+                            className={`flex flex-col items-center p-4 rounded-2xl border transition-all duration-500 relative overflow-hidden ${
+                                badge.unlocked 
+                                    ? 'bg-white border-brand-100 shadow-sm hover:shadow-md hover:-translate-y-1' 
+                                    : 'bg-stone-50 border-stone-100 opacity-60 grayscale'
+                            }`}
+                          >
+                              {/* Shine effect for unlocked */}
+                              {badge.unlocked && <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/50 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500"></div>}
+                              
+                              <div className="text-3xl mb-2 filter drop-shadow-sm">{badge.icon}</div>
+                              <span className="text-[10px] font-bold text-stone-800 text-center leading-tight mb-1">{badge.label}</span>
+                              <span className="text-[8px] text-stone-400 text-center">{badge.desc}</span>
+                              
+                              {!badge.unlocked && (
+                                  <div className="absolute top-2 right-2 text-[10px]">🔒</div>
+                              )}
                           </div>
                       ))}
                   </div>
               </div>
 
               {/* Quote Card */}
-              <div className="bg-brand-50 p-6 rounded-2xl relative overflow-hidden border border-brand-100 animate-slide-up delay-300">
-                  <div className="absolute top-0 right-0 text-9xl opacity-10 font-serif text-brand-900 leading-none -mr-4 -mt-8">”</div>
-                  <p className="relative z-10 font-serif italic text-brand-800 text-center text-lg leading-relaxed">
-                      "Strive for progress, not perfection."
-                  </p>
+              <div className="bg-brand-900 p-8 rounded-[2rem] relative overflow-hidden shadow-xl text-white text-center">
+                  <div className="absolute top-0 left-0 w-full h-full opacity-20 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+                  <div className="relative z-10">
+                      <p className="font-serif italic text-xl leading-relaxed opacity-90">
+                          "Growth is not a race, it's a rhythm. Find yours."
+                      </p>
+                      <div className="w-12 h-1 bg-brand-500/50 mx-auto mt-4 rounded-full"></div>
+                  </div>
               </div>
           </div>
       )}
 
       {activeTab === 'settings' && (
-          <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden animate-fade-in">
-              <div className="p-4 border-b border-stone-50 flex justify-between items-center hover:bg-stone-50 transition-colors">
-                  <span className="text-sm font-bold text-stone-600">Notifications</span>
-                  <div className="w-10 h-6 bg-brand-500 rounded-full relative cursor-pointer">
-                      <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm"></div>
-                  </div>
-              </div>
-              <div className="p-4 border-b border-stone-50 flex justify-between items-center hover:bg-stone-50 transition-colors">
-                  <span className="text-sm font-bold text-stone-600">Incognito Mode</span>
-                  <div className="w-10 h-6 bg-stone-200 rounded-full relative cursor-pointer">
-                      <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm"></div>
-                  </div>
-              </div>
-              <div className="p-4 flex justify-between items-center hover:bg-stone-50 transition-colors cursor-pointer text-brand-600 font-bold text-sm">
-                  <span>Help & Support</span>
-                  <span>→</span>
-              </div>
+          <div className="bg-white rounded-3xl border border-stone-100 shadow-sm overflow-hidden animate-fade-in divide-y divide-stone-50">
+              {[
+                  { label: 'Notifications', type: 'toggle', active: true },
+                  { label: 'Incognito Mode', type: 'toggle', active: false },
+                  { label: 'Sound Effects', type: 'toggle', active: true },
+                  { label: 'Dark Mode', type: 'toggle', active: false },
+                  { label: 'Help & Support', type: 'link' },
+                  { label: 'Privacy Policy', type: 'link' },
+              ].map((item, idx) => (
+                <div key={idx} className="p-5 flex justify-between items-center hover:bg-stone-50 transition-colors cursor-pointer group">
+                    <span className="text-sm font-bold text-stone-600 group-hover:text-stone-900 transition-colors">{item.label}</span>
+                    {item.type === 'toggle' ? (
+                        <div className={`w-11 h-6 rounded-full relative transition-colors ${item.active ? 'bg-brand-500' : 'bg-stone-200'}`}>
+                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all ${item.active ? 'left-6' : 'left-1'}`}></div>
+                        </div>
+                    ) : (
+                        <span className="text-stone-300 group-hover:text-brand-500 transition-colors">→</span>
+                    )}
+                </div>
+              ))}
               
-              <div className="p-4 border-t border-stone-100 mt-2">
+              <div className="p-5 mt-2 bg-stone-50">
                   <button 
                     onClick={onLogout}
-                    className="w-full py-3 bg-stone-100 text-stone-600 rounded-xl font-bold text-sm hover:bg-red-50 hover:text-red-500 transition-colors"
+                    className="w-full py-4 bg-white border border-stone-200 text-red-500 rounded-2xl font-bold text-sm hover:bg-red-50 hover:border-red-200 transition-all shadow-sm"
                   >
                       Sign Out
                   </button>
+                  <p className="text-center text-[10px] text-stone-300 mt-4 uppercase tracking-widest">Version 1.0.0 • Common Ground</p>
               </div>
           </div>
       )}

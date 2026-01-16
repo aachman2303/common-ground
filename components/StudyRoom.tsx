@@ -33,10 +33,11 @@ export const StudyRoom: React.FC<StudyRoomProps> = ({ user, onSessionComplete })
   const stats = user?.stats || { focusMinutes: 0, streakDays: 0, communitiesJoined: 0, sessionsCompleted: 0 };
 
   const ACHIEVEMENTS = [
-    { id: '1', icon: '🌙', label: 'Late-night Scholar', desc: 'Focus session past midnight', unlocked: stats.sessionsCompleted >= 5 }, // Mock logic
-    { id: '2', icon: '🤝', label: 'Community Pillar', desc: 'Studied with 100 peers', unlocked: stats.communitiesJoined >= 5 },
+    { id: '1', icon: '🌙', label: 'Late-night Scholar', desc: 'Focus session past midnight', unlocked: stats.sessionsCompleted >= 5 },
+    { id: '2', icon: '👥', label: 'Community Pillar', desc: 'Studied with 100 peers', unlocked: stats.communitiesJoined >= 5 },
     { id: '3', icon: '🔥', label: 'Deep Work', desc: '2 hour continuous streak', unlocked: stats.focusMinutes >= 120 },
     { id: '4', icon: '🧘', label: 'Zen Master', desc: 'Completed 50 sessions', unlocked: stats.sessionsCompleted >= 50 },
+    { id: '5', icon: '🌱', label: 'Early Bird', desc: 'Session before 8 AM', unlocked: false },
   ];
 
   // Timer Ring Calculations
@@ -330,28 +331,34 @@ export const StudyRoom: React.FC<StudyRoomProps> = ({ user, onSessionComplete })
          )}
       </div>
 
-      {/* Achievements - Compact */}
-      <div className="py-2">
+      {/* Achievements - Compact & Accessible */}
+      <div className="py-2 animate-fade-in">
          <div className="flex items-center justify-between px-2 mb-2">
-             <h3 className="text-xs font-bold text-stone-400 uppercase tracking-widest">Milestones</h3>
+             <h3 className="text-xs font-bold text-stone-400 uppercase tracking-widest flex items-center gap-1">
+                <span>🏆</span> Milestones
+             </h3>
+             <span className="text-[10px] text-stone-400 bg-stone-100 px-2 py-0.5 rounded-full">
+                {ACHIEVEMENTS.filter(a => a.unlocked).length}/{ACHIEVEMENTS.length}
+             </span>
          </div>
-         <div className="flex space-x-3 overflow-x-auto pb-4 px-1 scrollbar-hide">
+         <div className="flex space-x-3 overflow-x-auto pb-4 px-1 scrollbar-hide snap-x">
             {ACHIEVEMENTS.map((badge) => (
                 <button
                     key={badge.id}
                     onClick={() => setSelectedBadge(selectedBadge === badge.id ? null : badge.id)}
-                    className={`relative flex-shrink-0 w-12 h-12 rounded-xl flex flex-col items-center justify-center transition-all duration-300 ${
+                    className={`relative flex-shrink-0 w-12 h-12 rounded-xl flex flex-col items-center justify-center transition-all duration-300 snap-center focus:outline-none focus:ring-2 focus:ring-brand-300 ${
                         badge.unlocked 
                           ? (selectedBadge === badge.id ? 'bg-brand-600 text-white shadow-lg scale-105 z-10' : 'bg-white border border-stone-100 text-brand-500 hover:border-brand-200')
-                          : 'bg-stone-100 text-stone-300 cursor-not-allowed border border-transparent'
+                          : 'bg-stone-50 text-stone-300 cursor-not-allowed border border-transparent'
                     }`}
                     aria-label={`${badge.label}: ${badge.desc}`}
+                    aria-expanded={selectedBadge === badge.id}
                 >
                     <span className={`text-lg ${!badge.unlocked && 'grayscale opacity-50'}`}>{badge.icon}</span>
                     {!badge.unlocked && <span className="absolute bottom-0.5 right-0.5 text-[8px]">🔒</span>}
                     
                     {selectedBadge === badge.id && (
-                       <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 w-36 bg-stone-800 text-white text-[10px] p-2 rounded-lg text-center z-50 pointer-events-none animate-appear shadow-xl leading-tight">
+                       <div className="absolute -bottom-14 left-1/2 transform -translate-x-1/2 w-40 bg-stone-800 text-white text-[10px] p-2 rounded-lg text-center z-50 pointer-events-none animate-appear shadow-xl leading-tight">
                            <div className="font-bold text-brand-100 mb-0.5">{badge.label}</div>
                            <div className="font-normal opacity-90">{badge.desc}</div>
                            <div className="text-[9px] text-stone-400 mt-1">{badge.unlocked ? 'Unlocked' : 'Locked'}</div>
