@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { UserProfile, RankInfo } from '../types';
 import { AVATARS } from '../constants';
+import { Bell, EyeOff, Volume2, Moon, ChevronRight, Server, LogOut } from 'lucide-react';
 
 interface ProfileProps {
   user: UserProfile;
@@ -23,7 +24,6 @@ const TECH_STACK = [
     color: "bg-indigo-50 text-indigo-600",
     techs: ["Vertex AI", "Gemini API", "Dialogflow", "TensorFlow.js"]
   },
-  // ... existing items kept for brevity, structure remains ...
   { title: "AI Safety & Moderation", icon: "🛡️", color: "bg-rose-50 text-rose-600", techs: ["Perspective API", "Recommendations AI"] },
   { title: "Language & Vision", icon: "👁️", color: "bg-teal-50 text-teal-600", techs: ["Natural Language API", "Vision AI"] },
   { title: "Predictive Intelligence", icon: "🔮", color: "bg-fuchsia-50 text-fuchsia-600", techs: ["Vertex AI Forecasting", "AutoML Tables", "Anomaly Detection"] },
@@ -39,6 +39,18 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
   const [activeTab, setActiveTab] = useState<'stats' | 'settings'>('stats');
   const [showTechModal, setShowTechModal] = useState(false);
 
+  // Settings State
+  const [settings, setSettings] = useState({
+    notifications: true,
+    incognito: false,
+    sound: true,
+    darkMode: false,
+  });
+
+  const toggleSetting = (key: keyof typeof settings) => {
+    setSettings(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
   // Calculate Rank
   const currentMinutes = user.stats?.focusMinutes || 0;
   const currentRankIndex = RANKS.findIndex((r, i) => 
@@ -47,10 +59,6 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
   const currentRank = RANKS[currentRankIndex !== -1 ? currentRankIndex : 0];
   const nextRank = RANKS[currentRankIndex + 1];
   
-  const progressToNext = nextRank 
-    ? Math.min(100, Math.max(0, ((currentMinutes - currentRank.minMinutes) / (nextRank.minMinutes - currentRank.minMinutes)) * 100))
-    : 100;
-
   // Derive Badges from Stats
   const stats = user.stats || { focusMinutes: 0, streakDays: 0, communitiesJoined: 0, sessionsCompleted: 0 };
   const ALL_BADGES = [
@@ -238,45 +246,67 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
       )}
 
       {activeTab === 'settings' && (
-          <div className="bg-white rounded-[2rem] border border-stone-100 shadow-soft overflow-hidden animate-fade-in divide-y divide-stone-50">
-              {[
-                  { label: 'Notifications', type: 'toggle', active: true },
-                  { label: 'Incognito Mode', type: 'toggle', active: false },
-                  { label: 'Sound Effects', type: 'toggle', active: true },
-                  { label: 'Dark Mode', type: 'toggle', active: false },
-              ].map((item, idx) => (
-                <div key={idx} className="p-5 flex justify-between items-center hover:bg-stone-50 transition-colors cursor-pointer group">
-                    <span className="text-sm font-bold text-stone-600 group-hover:text-stone-900 transition-colors">{item.label}</span>
-                    {item.type === 'toggle' ? (
-                        <div className={`w-12 h-7 rounded-full relative transition-colors ${item.active ? 'bg-brand-500' : 'bg-stone-200'}`}>
-                            <div className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow-sm transition-all ${item.active ? 'left-6' : 'left-1'}`}></div>
+          <div className="space-y-4 animate-fade-in">
+              {/* Preferences Group */}
+              <div className="bg-white rounded-[2rem] border border-stone-100 shadow-soft overflow-hidden p-2">
+                  {[
+                      { id: 'notifications', label: 'Notifications', icon: Bell, active: settings.notifications },
+                      { id: 'incognito', label: 'Incognito Mode', icon: EyeOff, active: settings.incognito },
+                      { id: 'sound', label: 'Sound Effects', icon: Volume2, active: settings.sound },
+                      { id: 'darkMode', label: 'Dark Mode', icon: Moon, active: settings.darkMode },
+                  ].map((item) => (
+                    <div 
+                        key={item.id} 
+                        onClick={() => toggleSetting(item.id as keyof typeof settings)}
+                        className="p-4 flex justify-between items-center hover:bg-stone-50 rounded-2xl transition-all cursor-pointer group"
+                    >
+                        <div className="flex items-center space-x-4">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${item.active ? 'bg-brand-50 text-brand-600' : 'bg-stone-50 text-stone-400 group-hover:bg-stone-100 group-hover:text-stone-600'}`}>
+                                <item.icon size={20} />
+                            </div>
+                            <span className="text-sm font-bold text-stone-700 group-hover:text-stone-900 transition-colors">{item.label}</span>
                         </div>
-                    ) : (
-                        <span className="text-stone-300 group-hover:text-brand-500 transition-colors">→</span>
-                    )}
-                </div>
-              ))}
+                        
+                        {/* Custom Toggle Switch */}
+                        <div className={`w-12 h-7 rounded-full relative transition-colors duration-300 ease-out border ${item.active ? 'bg-brand-500 border-brand-500' : 'bg-stone-100 border-stone-200'}`}>
+                            <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-300 ease-out ${item.active ? 'translate-x-5' : 'translate-x-0.5'}`}></div>
+                        </div>
+                    </div>
+                  ))}
+              </div>
 
-              <div 
-                onClick={() => setShowTechModal(true)}
-                className="p-5 flex justify-between items-center hover:bg-brand-50 transition-colors cursor-pointer group bg-stone-50/50"
-              >
-                 <div className="flex items-center space-x-3">
-                    <span className="text-lg">🏗️</span>
-                    <span className="text-sm font-bold text-stone-600 group-hover:text-brand-700">Platform Architecture</span>
-                 </div>
-                 <span className="text-stone-300 group-hover:text-brand-500">→</span>
+              {/* System & Account Group */}
+              <div className="bg-white rounded-[2rem] border border-stone-100 shadow-soft overflow-hidden p-2 space-y-1">
+                  <div 
+                    onClick={() => setShowTechModal(true)}
+                    className="p-4 flex justify-between items-center hover:bg-stone-50 rounded-2xl transition-all cursor-pointer group"
+                  >
+                     <div className="flex items-center space-x-4">
+                        <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                            <Server size={20} />
+                        </div>
+                        <div>
+                            <span className="block text-sm font-bold text-stone-700 group-hover:text-stone-900">Platform Architecture</span>
+                            <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider">Google Cloud</span>
+                        </div>
+                     </div>
+                     <ChevronRight size={18} className="text-stone-300 group-hover:text-brand-500 transition-colors" />
+                  </div>
+
+                  <div 
+                    onClick={onLogout}
+                    className="p-4 flex justify-between items-center hover:bg-red-50 rounded-2xl transition-all cursor-pointer group"
+                  >
+                     <div className="flex items-center space-x-4">
+                        <div className="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center group-hover:bg-red-100 transition-colors">
+                            <LogOut size={20} />
+                        </div>
+                        <span className="text-sm font-bold text-stone-700 group-hover:text-red-600 transition-colors">Sign Out</span>
+                     </div>
+                  </div>
               </div>
               
-              <div className="p-5 mt-2 bg-stone-50">
-                  <button 
-                    onClick={onLogout}
-                    className="w-full py-4 bg-white border border-stone-200 text-red-500 rounded-2xl font-bold text-sm hover:bg-red-50 hover:border-red-200 transition-all shadow-sm"
-                  >
-                      Sign Out
-                  </button>
-                  <p className="text-center text-[10px] text-stone-300 mt-4 uppercase tracking-widest">Version 1.0.0 • Common Ground</p>
-              </div>
+              <p className="text-center text-[10px] text-stone-300 mt-6 uppercase tracking-widest font-bold">Version 1.0.0 • Common Ground</p>
           </div>
       )}
 
