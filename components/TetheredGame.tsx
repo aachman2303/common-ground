@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import Matter from 'matter-js';
-import { AVATARS } from '../constants';
+import { GameLobby } from './GameLobby';
 
 interface TetheredGameProps {
   onExit: () => void;
@@ -11,7 +11,6 @@ export const TetheredGame: React.FC<TetheredGameProps> = ({ onExit }) => {
   const [gameState, setGameState] = useState<'lobby' | 'playing' | 'won' | 'lost'>('lobby');
   const [height, setHeight] = useState(0);
   const [partner, setPartner] = useState<any>(null);
-  const [lobbyStatus, setLobbyStatus] = useState("Scanning for anonymous peer...");
   
   const sceneRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -19,26 +18,6 @@ export const TetheredGame: React.FC<TetheredGameProps> = ({ onExit }) => {
   // Refs for Game Engine
   const engineRef = useRef<Matter.Engine | null>(null);
   const keysRef = useRef<{ [key: string]: boolean }>({});
-
-  // Lobby Logic
-  useEffect(() => {
-      if (gameState === 'lobby') {
-          const timers: ReturnType<typeof setTimeout>[] = [];
-          
-          timers.push(setTimeout(() => setLobbyStatus("Connecting to secure channel..."), 1500));
-          timers.push(setTimeout(() => setLobbyStatus("Syncing physics engine..."), 3000));
-          timers.push(setTimeout(() => {
-              const randomAvatar = AVATARS[Math.floor(Math.random() * AVATARS.length)];
-              setPartner(randomAvatar);
-              setLobbyStatus("Partner Found!");
-          }, 4500));
-          timers.push(setTimeout(() => {
-              setGameState('playing');
-          }, 6000));
-
-          return () => timers.forEach(clearTimeout);
-      }
-  }, [gameState]);
 
   // Game Logic
   useEffect(() => {
@@ -254,19 +233,14 @@ export const TetheredGame: React.FC<TetheredGameProps> = ({ onExit }) => {
       
       {/* LOBBY SCREEN */}
       {gameState === 'lobby' && (
-          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center p-8 bg-slate-900">
-              <div className="relative mb-8">
-                  <div className="w-32 h-32 rounded-full border-4 border-indigo-500/30 animate-ping absolute inset-0"></div>
-                  <div className="w-32 h-32 rounded-full border-4 border-t-indigo-500 border-r-indigo-500/50 border-b-indigo-500/10 border-l-indigo-500/50 animate-spin"></div>
-                  <div className="absolute inset-0 flex items-center justify-center text-5xl">
-                      {partner ? partner.icon : '🛰️'}
-                  </div>
-              </div>
-              <h2 className="text-2xl font-mono font-bold text-white mb-2 animate-pulse">{lobbyStatus}</h2>
-              <p className="text-slate-500 text-sm">Searching for anonymous partner in your rank...</p>
-              
-              <button onClick={onExit} className="mt-12 text-slate-500 hover:text-white uppercase tracking-widest text-xs font-bold">Cancel Matchmaking</button>
-          </div>
+          <GameLobby 
+            gameName="Tethered Trials" 
+            onMatchFound={(p) => {
+              setPartner(p);
+              setGameState('playing');
+            }}
+            onCancel={onExit}
+          />
       )}
 
       {/* PLAYING HUD */}
@@ -282,7 +256,9 @@ export const TetheredGame: React.FC<TetheredGameProps> = ({ onExit }) => {
                         </div>
                         <div className="flex items-center space-x-1">
                             <div className="w-3 h-3 bg-pink-400 rounded-sm"></div>
-                            <span>PARTNER (Arrows)</span>
+                            <span>
+                                {partner ? partner.icon : 'PEER'} (Arrows)
+                            </span>
                         </div>
                     </div>
                 </div>

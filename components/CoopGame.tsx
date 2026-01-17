@@ -1,16 +1,18 @@
 
 import React, { useState, useEffect, useRef } from 'react';
+import { GameLobby } from './GameLobby';
 
 interface CoopGameProps {
   onExit: () => void;
 }
 
 export const CoopGame: React.FC<CoopGameProps> = ({ onExit }) => {
-  const [gameState, setGameState] = useState<'intro' | 'playing' | 'ended'>('intro');
+  const [gameState, setGameState] = useState<'intro' | 'lobby' | 'playing' | 'ended'>('intro');
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
   const [feedback, setFeedback] = useState<string>("");
   const [timeLeft, setTimeLeft] = useState(60);
+  const [partner, setPartner] = useState<any>(null);
 
   // Animation Refs
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -154,13 +156,29 @@ export const CoopGame: React.FC<CoopGameProps> = ({ onExit }) => {
                     Unwind with your peer. <br/>
                     Tap together when the breathing circle hits the <span className="text-brand-300 font-bold">Ring</span>.
                 </p>
-                <button 
-                    onClick={() => setGameState('playing')}
-                    className="px-8 py-4 bg-brand-600 text-white rounded-2xl font-bold shadow-lg shadow-brand-500/30 hover:bg-brand-500 transition-all hover:scale-105"
-                >
-                    Start Sync
-                </button>
+                <div className="flex flex-col space-y-3 w-full max-w-xs">
+                    <button 
+                        onClick={() => setGameState('lobby')}
+                        className="px-8 py-4 bg-brand-600 text-white rounded-2xl font-bold shadow-lg shadow-brand-500/30 hover:bg-brand-500 transition-all hover:scale-105"
+                    >
+                        Enter Lobby
+                    </button>
+                    <button onClick={onExit} className="text-xs text-slate-500 font-bold uppercase tracking-widest hover:text-white">
+                        Back to Arcade
+                    </button>
+                </div>
             </div>
+        )}
+
+        {gameState === 'lobby' && (
+            <GameLobby 
+                gameName="Harmony Ripple"
+                onMatchFound={(p) => {
+                    setPartner(p);
+                    setGameState('playing');
+                }}
+                onCancel={() => setGameState('intro')}
+            />
         )}
 
         {gameState === 'playing' && (
@@ -197,10 +215,12 @@ export const CoopGame: React.FC<CoopGameProps> = ({ onExit }) => {
 
                 {/* Peer Indicator */}
                 <div className="p-6 flex justify-center items-center space-x-3 opacity-80">
-                    <div className="w-8 h-8 rounded-full bg-indigo-500/20 border border-indigo-500 flex items-center justify-center text-xs">
-                        P
+                    <div className={`w-8 h-8 rounded-full border border-indigo-500 flex items-center justify-center text-xs ${partner ? partner.color : 'bg-indigo-500/20'}`}>
+                        {partner ? partner.icon : 'P'}
                     </div>
-                    <div className="text-xs font-bold text-slate-400">Peer is syncing...</div>
+                    <div className="text-xs font-bold text-slate-400">
+                        {partner ? 'Peer is syncing...' : 'Peer is syncing...'}
+                    </div>
                 </div>
             </div>
         )}
@@ -218,7 +238,7 @@ export const CoopGame: React.FC<CoopGameProps> = ({ onExit }) => {
                 <div className="flex space-x-3 w-full">
                     <button 
                         onClick={() => {
-                            setGameState('playing');
+                            setGameState('lobby'); // Re-enter lobby for new partner
                             setScore(0);
                             setStreak(0);
                             setTimeLeft(60);
