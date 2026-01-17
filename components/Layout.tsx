@@ -1,15 +1,18 @@
 import React from 'react';
 import { ViewState, UserProfile } from '../types';
 import { AVATARS } from '../constants';
+import { ArrowLeft } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
   currentView: ViewState;
   onViewChange: (view: ViewState) => void;
   user: UserProfile | null;
+  canGoBack?: boolean;
+  onBack?: () => void;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, currentView, onViewChange, user }) => {
+export const Layout: React.FC<LayoutProps> = ({ children, currentView, onViewChange, user, canGoBack, onBack }) => {
   const navItems = [
     { id: ViewState.CHECK_IN, label: 'Pulse', icon: '📝' },
     { id: ViewState.MAP, label: 'Map', icon: '🗺️' },
@@ -31,9 +34,20 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onViewCha
       <div className="absolute bottom-[-10%] left-[20%] w-72 h-72 bg-cozy-clay/10 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000"></div>
 
       {/* Header - Glassmorphism */}
-      <header className="absolute top-0 w-full z-20 px-6 py-5 flex justify-between items-center glass-panel rounded-b-3xl">
-        <div onClick={() => onViewChange(ViewState.CHECK_IN)} className="cursor-pointer">
-          <h1 className="text-2xl font-serif font-bold text-brand-800 tracking-tight">Common Ground</h1>
+      <header className="absolute top-0 w-full z-20 px-4 py-4 flex justify-between items-center glass-panel rounded-b-3xl">
+        <div className="flex items-center gap-2">
+            {canGoBack && onBack && (
+                <button 
+                  onClick={onBack} 
+                  className="p-2 -ml-2 rounded-full hover:bg-stone-100/50 text-stone-600 transition-colors active:scale-95"
+                  aria-label="Go back"
+                >
+                    <ArrowLeft className="w-6 h-6" />
+                </button>
+            )}
+            <div onClick={() => onViewChange(ViewState.CHECK_IN)} className="cursor-pointer">
+              <h1 className="text-xl sm:text-2xl font-serif font-bold text-brand-800 tracking-tight">Common Ground</h1>
+            </div>
         </div>
         <div className="flex items-center space-x-3">
            {user && (

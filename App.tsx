@@ -21,6 +21,7 @@ import { MOCK_EVENTS, MOCK_COMMUNITIES } from './constants';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewState>(ViewState.CHECK_IN);
+  const [history, setHistory] = useState<ViewState[]>([]); // Navigation History
   const [user, setUser] = useState<UserProfile | null>(null);
   const [userMood, setUserMood] = useState<string | null>(null);
   const [isLoginView, setIsLoginView] = useState(true); // Default to login view
@@ -28,6 +29,23 @@ const App: React.FC = () => {
   // Global State for "Enabled" Features
   const [events, setEvents] = useState<CalendarEvent[]>(MOCK_EVENTS);
   const [communities, setCommunities] = useState<Community[]>(MOCK_COMMUNITIES);
+
+  // Navigation Logic
+  const navigate = (view: ViewState) => {
+    if (view === currentView) return;
+    setHistory(prev => [...prev, currentView]);
+    setCurrentView(view);
+  };
+
+  const goBack = () => {
+    setHistory(prev => {
+        if (prev.length === 0) return prev;
+        const newHistory = [...prev];
+        const lastView = newHistory.pop();
+        if (lastView) setCurrentView(lastView);
+        return newHistory;
+    });
+  };
 
   const handleOnboardingComplete = (newUser: UserProfile) => {
     // Initialize mock stats for ranking system
@@ -43,11 +61,13 @@ const App: React.FC = () => {
     };
     setUser(userWithStats);
     setCurrentView(ViewState.CHECK_IN);
+    setHistory([]);
   };
 
   const handleLogin = (returningUser: UserProfile) => {
     setUser(returningUser);
     setCurrentView(ViewState.CHECK_IN);
+    setHistory([]);
   };
 
   const handleAddEvent = (newEvent: CalendarEvent) => {
@@ -85,10 +105,10 @@ const App: React.FC = () => {
       case ViewState.CHECK_IN:
         return <CheckIn onComplete={(mood) => {
           setUserMood(mood);
-          setCurrentView(ViewState.HEATMAP);
+          navigate(ViewState.HEATMAP);
         }} />;
       case ViewState.HEATMAP:
-        return <Heatmap onViewChange={setCurrentView} userSignal={userMood} />;
+        return <Heatmap onViewChange={navigate} userSignal={userMood} />;
       case ViewState.STUDY_ROOM:
         return <StudyRoom user={user} onSessionComplete={handleSessionComplete} />;
       case ViewState.CALENDAR:
@@ -97,7 +117,7 @@ const App: React.FC = () => {
           onAddEvent={handleAddEvent} 
           onJoinStudyChat={() => {
             setUserMood('heavy_load'); // Contextual mood
-            setCurrentView(ViewState.PULSE_CHAT);
+            navigate(ViewState.PULSE_CHAT);
           }}
         />;
       case ViewState.RESOURCES:
@@ -111,13 +131,19 @@ const App: React.FC = () => {
       case ViewState.COMMUNITY_HUB:
         return <CommunityHub communities={communities} onJoin={handleJoinCommunity} onCreate={handleCreateCommunity} />;
       case ViewState.PULSE_CHAT:
-        return <PulseChat userMood={userMood} onExit={() => setCurrentView(ViewState.HEATMAP)} />;
+        return <PulseChat userMood={userMood} onExit={() => {
+            if (history.length > 0) goBack();
+            else navigate(ViewState.HEATMAP);
+        }} />;
       case ViewState.ONE_ON_ONE_CHAT:
-        return <OneOnOneChat userMood={userMood} onExit={() => setCurrentView(ViewState.HEATMAP)} />;
+        return <OneOnOneChat userMood={userMood} onExit={() => {
+             if (history.length > 0) goBack();
+             else navigate(ViewState.HEATMAP);
+        }} />;
       case ViewState.PROFILE:
         return user ? <Profile user={user} onLogout={() => setUser(null)} /> : <div>Log in</div>;
       default:
-        return <CheckIn onComplete={() => setCurrentView(ViewState.HEATMAP)} />;
+        return <CheckIn onComplete={() => navigate(ViewState.HEATMAP)} />;
     }
   };
 
@@ -147,7 +173,13 @@ const App: React.FC = () => {
   }
 
   return (
-    <Layout currentView={currentView} onViewChange={setCurrentView} user={user}>
+    <Layout 
+      currentView={currentView} 
+      onViewChange={navigate} 
+      user={user}
+      canGoBack={history.length > 0}
+      onBack={goBack}
+    >
       {renderView()}
       <AiCompanion />
     </Layout>
