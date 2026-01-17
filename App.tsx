@@ -38,13 +38,17 @@ const App: React.FC = () => {
   };
 
   const goBack = () => {
-    setHistory(prev => {
-        if (prev.length === 0) return prev;
-        const newHistory = [...prev];
-        const lastView = newHistory.pop();
-        if (lastView) setCurrentView(lastView);
-        return newHistory;
-    });
+    if (history.length > 0) {
+      setHistory(prev => {
+          const newHistory = [...prev];
+          const lastView = newHistory.pop();
+          if (lastView) setCurrentView(lastView);
+          return newHistory;
+      });
+    } else if (currentView !== ViewState.CHECK_IN) {
+        // Fallback: If no history but not on home screen, go home
+        setCurrentView(ViewState.CHECK_IN);
+    }
   };
 
   const handleOnboardingComplete = (newUser: UserProfile) => {
@@ -177,7 +181,7 @@ const App: React.FC = () => {
       currentView={currentView} 
       onViewChange={navigate} 
       user={user}
-      canGoBack={history.length > 0}
+      canGoBack={history.length > 0 || currentView !== ViewState.CHECK_IN}
       onBack={goBack}
     >
       {renderView()}
