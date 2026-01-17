@@ -17,11 +17,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onViewCha
   const navItems = [
     { id: ViewState.CHECK_IN, label: 'Pulse', icon: '📝' },
     { id: ViewState.MAP, label: 'Map', icon: '🗺️' },
-    { id: ViewState.COMMUNITY_HUB, label: 'Clubs', icon: '⛺' },
+    { id: ViewState.GAME_ARCADE, label: 'Arcade', icon: '🎮' },
     { id: ViewState.SOCIAL_LOUNGE, label: 'Lounge', icon: '🛋️' }, 
     { id: ViewState.STUDY_ROOM, label: 'Focus', icon: '🕯️' }, 
     { id: ViewState.CALENDAR, label: 'Plan', icon: '📅' },
-    { id: ViewState.CHAT, label: 'Tutor', icon: '🎓' },
   ];
 
   const userAvatar = user ? AVATARS[user.avatarId].icon : '👤';

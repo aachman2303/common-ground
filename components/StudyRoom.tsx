@@ -251,39 +251,76 @@ export const StudyRoom: React.FC<StudyRoomProps> = ({ user, onSessionComplete })
 
       {/* Session Completed Overlay */}
       {sessionCompleted && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-md rounded-[2.5rem] animate-fade-in p-6">
-           <div className="bg-white p-8 rounded-[2rem] shadow-2xl border border-brand-100 text-center w-full max-w-xs animate-pop">
-              <div className="text-6xl mb-6">🎉</div>
-              <h3 className="text-3xl font-serif font-bold text-brand-800 mb-3">Session Complete!</h3>
-              <p className="text-stone-600 mb-6 font-medium">
-                You focused for <span className="font-bold text-brand-600">{initialTime / 60} minutes</span>.
-              </p>
-              
-              {initialTime / 60 >= 25 ? (
-                  <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-5 rounded-2xl mb-6 border border-indigo-100 relative overflow-hidden group hover:shadow-md transition-all">
-                     <div className="absolute -top-4 -right-4 text-6xl opacity-10 group-hover:scale-110 transition-transform">🎁</div>
-                     <p className="text-xs text-indigo-500 font-bold uppercase tracking-wider mb-2">Reward Unlocked</p>
-                     <div className="flex items-center justify-center space-x-3 mb-2">
-                         <span className="text-3xl">{getRewardPreview().icon}</span>
-                         <span className="font-bold text-indigo-900 text-lg">{getRewardPreview().label}</span>
-                     </div>
-                  </div>
-              ) : (
-                  <div className="bg-brand-50 p-4 rounded-2xl mb-6 border border-brand-100">
-                     <p className="text-xs text-brand-500 font-bold uppercase tracking-wider mb-1">Rewards</p>
-                     <p className="font-bold text-brand-800 text-lg">+{Math.floor(initialTime / 60) + 10} Karma Points</p>
-                  </div>
-              )}
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md rounded-[2.5rem] animate-fade-in p-6">
+           <div className="bg-white p-1 rounded-[2.5rem] shadow-2xl w-full max-w-sm animate-pop">
+              <div className="bg-white rounded-[2.3rem] p-6 relative overflow-hidden">
+                {/* Confetti / Decor */}
+                <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-brand-50/80 to-transparent pointer-events-none"></div>
+                <div className="absolute -top-12 -right-12 w-48 h-48 bg-yellow-100/50 rounded-full blur-3xl pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
 
-              <button 
-                onClick={() => {
-                  setSessionCompleted(false);
-                  resetTimer();
-                }}
-                className="w-full py-4 bg-brand-600 text-white rounded-2xl font-bold hover:bg-brand-700 transition-colors shadow-lg shadow-brand-200"
-              >
-                Claim & Continue
-              </button>
+                <div className="relative z-10 text-center">
+                    <div className="mb-4 relative inline-block">
+                        <div className="text-6xl animate-bounce filter drop-shadow-md">🎉</div>
+                        <svg className="absolute -top-6 -left-6 w-24 h-24 text-yellow-400 animate-spin-slow opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+                           <path d="M12 2L15 8L21 9L17 14L18 20L12 17L6 20L7 14L3 9L9 8L12 2Z" fill="currentColor" stroke="none"/>
+                        </svg>
+                    </div>
+                    
+                    <h3 className="text-3xl font-serif font-bold text-stone-800 mb-2">Focus Mastered</h3>
+                    <p className="text-stone-500 font-medium mb-8">You just invested <span className="text-brand-600 font-bold">{Math.floor(initialTime / 60)} minutes</span> in yourself.</p>
+
+                    <div className="grid grid-cols-2 gap-4 mb-8">
+                        <div className="bg-stone-50 rounded-2xl p-4 border border-stone-100 flex flex-col items-center">
+                            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1">Karma Earned</span>
+                            <div className="text-3xl font-bold text-brand-600">+{Math.floor(initialTime / 60) + 10}</div>
+                        </div>
+                        <div className="bg-orange-50 rounded-2xl p-4 border border-orange-100 flex flex-col items-center">
+                             <span className="text-[10px] font-bold text-orange-400 uppercase tracking-widest mb-1">Streak</span>
+                             <div className="flex items-center">
+                                <span className="text-xl mr-1">🔥</span>
+                                <span className="text-3xl font-bold text-orange-600">{user?.stats.streakDays || 0}</span>
+                             </div>
+                        </div>
+                    </div>
+
+                    {/* Reward logic */}
+                    {initialTime / 60 >= 25 ? (
+                       <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 bg-[length:200%_auto] animate-shimmer p-0.5 rounded-2xl mb-8 shadow-lg shadow-indigo-200">
+                           <div className="bg-white rounded-[14px] p-4 flex items-center text-left">
+                               <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-2xl mr-4 shrink-0">
+                                   {getRewardPreview().icon}
+                               </div>
+                               <div>
+                                   <div className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider mb-0.5">Unlocked Reward</div>
+                                   <div className="font-bold text-stone-800 text-sm">{getRewardPreview().label}</div>
+                               </div>
+                           </div>
+                       </div>
+                    ) : (
+                        <div className="mb-8 px-4">
+                            <div className="flex justify-between text-xs font-bold text-stone-400 mb-2">
+                                <span>Progress to Reward</span>
+                                <span>{(initialTime/60)}/25 min</span>
+                            </div>
+                            <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
+                                <div className="h-full bg-brand-300 w-[40%]"></div>
+                            </div>
+                        </div>
+                    )}
+
+                    <button 
+                        onClick={() => {
+                        setSessionCompleted(false);
+                        resetTimer();
+                        }}
+                        className="w-full py-4 bg-stone-900 text-white rounded-2xl font-bold hover:bg-black transition-all shadow-xl shadow-stone-200 active:scale-95 flex items-center justify-center space-x-2"
+                    >
+                        <span>Continue Journey</span>
+                        <span>→</span>
+                    </button>
+                </div>
+              </div>
            </div>
         </div>
       )}

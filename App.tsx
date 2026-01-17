@@ -18,6 +18,7 @@ import { AiCompanion } from './components/AiCompanion';
 import { SocialLounge } from './components/SocialLounge';
 import { CoopGame } from './components/CoopGame';
 import { TetheredGame } from './components/TetheredGame';
+import { GameArcade } from './components/GameArcade'; // New Import
 import { ViewState, UserProfile, CalendarEvent, Community, ActiveReward } from './types';
 import { MOCK_EVENTS, MOCK_COMMUNITIES } from './constants';
 
@@ -91,19 +92,11 @@ const App: React.FC = () => {
     setCommunities([newCommunity, ...communities]);
   };
 
-  const handleStartTethered = () => {
-      if (user && user.stats.communityPoints >= 50) {
-          setUser({
-              ...user,
-              stats: {
-                  ...user.stats,
-                  communityPoints: user.stats.communityPoints - 50
-              }
-          });
-          navigate(ViewState.TETHERED_GAME);
-      } else {
-          alert("You need 50 Karma Points to enter the Tethered Trials.");
-      }
+  // Arcade Launch Logic
+  const handleLaunchGame = (gameView: ViewState) => {
+      // Points logic is handled in the UI of GameArcade, 
+      // but we could double check or deduct points here if needed.
+      navigate(gameView);
   };
 
   const handleSessionComplete = (minutes: number) => {
@@ -194,12 +187,17 @@ const App: React.FC = () => {
         return <OneOnOneChat 
             userMood={userMood} 
             onExit={() => navigate(ViewState.HEATMAP)}
-            onPlayGame={handleStartTethered}
+            onPlayGame={() => navigate(ViewState.COOP_GAME)}
         />;
+      
+      // New Game Views
+      case ViewState.GAME_ARCADE:
+        return user ? <GameArcade user={user} onPlay={handleLaunchGame} /> : <div>Login Required</div>;
       case ViewState.COOP_GAME:
-        return <CoopGame onExit={() => navigate(ViewState.SOCIAL_LOUNGE)} />;
+        return <CoopGame onExit={() => navigate(ViewState.GAME_ARCADE)} />;
       case ViewState.TETHERED_GAME:
-        return <TetheredGame onExit={() => navigate(ViewState.SOCIAL_LOUNGE)} />;
+        return <TetheredGame onExit={() => navigate(ViewState.GAME_ARCADE)} />;
+        
       case ViewState.PROFILE:
         return user ? <Profile user={user} onLogout={() => setUser(null)} /> : <div>Log in</div>;
       default:

@@ -14,7 +14,8 @@ export enum ViewState {
   PROFILE = 'PROFILE',
   SOCIAL_LOUNGE = 'SOCIAL_LOUNGE',
   COOP_GAME = 'COOP_GAME', 
-  TETHERED_GAME = 'TETHERED_GAME', // New Physics Game
+  TETHERED_GAME = 'TETHERED_GAME',
+  GAME_ARCADE = 'GAME_ARCADE', // New Arcade Hub
 }
 
 export interface UserStats {

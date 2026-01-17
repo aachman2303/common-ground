@@ -1,26 +1,49 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import Matter from 'matter-js';
+import { AVATARS } from '../constants';
 
 interface TetheredGameProps {
   onExit: () => void;
 }
 
 export const TetheredGame: React.FC<TetheredGameProps> = ({ onExit }) => {
-  const [gameState, setGameState] = useState<'playing' | 'won' | 'lost'>('playing');
+  const [gameState, setGameState] = useState<'lobby' | 'playing' | 'won' | 'lost'>('lobby');
   const [height, setHeight] = useState(0);
+  const [partner, setPartner] = useState<any>(null);
+  const [lobbyStatus, setLobbyStatus] = useState("Scanning for anonymous peer...");
   
   const sceneRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
-  // Refs for Game Engine to avoid React state re-renders in game loop
+  // Refs for Game Engine
   const engineRef = useRef<Matter.Engine | null>(null);
-  const runnerRef = useRef<Matter.Runner | null>(null);
-  
-  // Input State Refs (Host/Client would sync this)
   const keysRef = useRef<{ [key: string]: boolean }>({});
 
+  // Lobby Logic
   useEffect(() => {
+      if (gameState === 'lobby') {
+          const timers: ReturnType<typeof setTimeout>[] = [];
+          
+          timers.push(setTimeout(() => setLobbyStatus("Connecting to secure channel..."), 1500));
+          timers.push(setTimeout(() => setLobbyStatus("Syncing physics engine..."), 3000));
+          timers.push(setTimeout(() => {
+              const randomAvatar = AVATARS[Math.floor(Math.random() * AVATARS.length)];
+              setPartner(randomAvatar);
+              setLobbyStatus("Partner Found!");
+          }, 4500));
+          timers.push(setTimeout(() => {
+              setGameState('playing');
+          }, 6000));
+
+          return () => timers.forEach(clearTimeout);
+      }
+  }, [gameState]);
+
+  // Game Logic
+  useEffect(() => {
+    if (gameState !== 'playing') return;
+
     // --- MATTER.JS SETUP ---
     const Engine = Matter.Engine,
           Render = Matter.Render,
@@ -33,7 +56,7 @@ export const TetheredGame: React.FC<TetheredGameProps> = ({ onExit }) => {
 
     // Create Engine
     const engine = Engine.create();
-    engine.gravity.y = 1.2; // Slightly heavier gravity for better platforming feel
+    engine.gravity.y = 1.2; 
     engineRef.current = engine;
 
     // Canvas Dimensions
@@ -61,12 +84,10 @@ export const TetheredGame: React.FC<TetheredGameProps> = ({ onExit }) => {
     const rope = Constraint.create({
       bodyA: playerA,
       bodyB: playerB,
-      stiffness: 0.05, // Elasticity
+      stiffness: 0.05, 
       damping: 0.05,
       length: 120,
-      render: {
-        visible: false, // We will draw this manually for neon effect
-      }
+      render: { visible: false }
     });
 
     // Platforms
@@ -117,7 +138,7 @@ export const TetheredGame: React.FC<TetheredGameProps> = ({ onExit }) => {
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
 
-    // Custom Render Loop (using requestAnimationFrame directly on canvas context)
+    // Custom Render Loop
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
     
@@ -139,7 +160,6 @@ export const TetheredGame: React.FC<TetheredGameProps> = ({ onExit }) => {
         if (keysRef.current['KeyA']) Body.applyForce(playerA, playerA.position, { x: -speed, y: 0 });
         if (keysRef.current['KeyD']) Body.applyForce(playerA, playerA.position, { x: speed, y: 0 });
         if (keysRef.current['KeyW']) {
-             // Basic ground check (velocity approx 0)
              if (Math.abs(playerA.velocity.y) < 0.5) Body.applyForce(playerA, playerA.position, { x: 0, y: jumpForce });
         }
 
@@ -151,35 +171,29 @@ export const TetheredGame: React.FC<TetheredGameProps> = ({ onExit }) => {
         }
 
         // 3. Game Logic
-        
-        // Camera Follow (Average Y of players)
         const targetY = (playerA.position.y + playerB.position.y) / 2;
         const offset = height / 2 - targetY;
-        cameraY += (offset - cameraY) * 0.1; // Smooth lerp
+        cameraY += (offset - cameraY) * 0.1; 
 
-        // Death Floor Rising
-        deathFloorY -= 0.5; // Slow rise
+        deathFloorY -= 0.5; 
         if (playerA.position.y > deathFloorY || playerB.position.y > deathFloorY) {
             setGameState('lost');
-            return; // Stop loop
+            return; 
         }
         
-        // Win Condition
         if (playerA.position.y < currentY || playerB.position.y < currentY) {
             setGameState('won');
             return;
         }
 
-        // Update Score UI
         setHeight(Math.floor(Math.abs(Math.min(0, targetY - (height - 100)) / 10)));
 
         // 4. Drawing
         ctx.clearRect(0, 0, width, height);
         ctx.save();
-        ctx.translate(0, cameraY); // Apply camera
+        ctx.translate(0, cameraY);
 
         // Draw Platforms
-        ctx.fillStyle = '#F8FAFC';
         platforms.forEach(p => {
             if (p.label === 'WinSensor') ctx.fillStyle = 'rgba(74, 222, 128, 0.3)';
             else if (p.label === 'Floor') ctx.fillStyle = '#334155';
@@ -195,9 +209,9 @@ export const TetheredGame: React.FC<TetheredGameProps> = ({ onExit }) => {
             ctx.fill();
         });
 
-        // Draw Rope (Neon Effect)
+        // Draw Rope
         const dist = Vector.magnitude(Vector.sub(playerA.position, playerB.position));
-        const tension = Math.min(dist / 120, 1); // 0 to 1
+        const tension = Math.min(dist / 120, 1); 
         
         ctx.shadowBlur = 10;
         ctx.shadowColor = tension > 0.9 ? '#F43F5E' : '#60A5FA';
@@ -210,15 +224,15 @@ export const TetheredGame: React.FC<TetheredGameProps> = ({ onExit }) => {
         ctx.shadowBlur = 0;
 
         // Draw Player A
-        ctx.fillStyle = '#60A5FA'; // Blue
+        ctx.fillStyle = '#60A5FA'; 
         ctx.fillRect(playerA.position.x - 15, playerA.position.y - 15, 30, 30);
         
         // Draw Player B
-        ctx.fillStyle = '#F472B6'; // Pink
+        ctx.fillStyle = '#F472B6'; 
         ctx.fillRect(playerB.position.x - 15, playerB.position.y - 15, 30, 30);
 
-        // Draw Death Floor (Visual)
-        ctx.fillStyle = 'rgba(244, 63, 94, 0.2)'; // Red glow
+        // Draw Death Floor
+        ctx.fillStyle = 'rgba(244, 63, 94, 0.2)'; 
         ctx.fillRect(0, deathFloorY, width, height * 2);
         
         ctx.restore();
@@ -227,47 +241,65 @@ export const TetheredGame: React.FC<TetheredGameProps> = ({ onExit }) => {
 
     renderLoop();
 
-    // Cleanup
     return () => {
         window.removeEventListener('keydown', handleKeyDown);
         window.removeEventListener('keyup', handleKeyUp);
         cancelAnimationFrame(animationId);
         Engine.clear(engine);
     };
-  }, []); // Run once on mount
+  }, [gameState]);
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900 text-white flex flex-col" ref={sceneRef}>
       
-      {/* HUD */}
-      <div className="absolute top-4 left-4 right-4 flex justify-between z-10 pointer-events-none">
-          <div>
-              <h2 className="text-xl font-bold font-serif text-white shadow-glow">Tethered</h2>
-              <div className="flex space-x-4 text-xs mt-1 opacity-80">
-                  <div className="flex items-center space-x-1">
-                      <div className="w-3 h-3 bg-blue-400 rounded-sm"></div>
-                      <span>WASD</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                      <div className="w-3 h-3 bg-pink-400 rounded-sm"></div>
-                      <span>ARROWS</span>
+      {/* LOBBY SCREEN */}
+      {gameState === 'lobby' && (
+          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center p-8 bg-slate-900">
+              <div className="relative mb-8">
+                  <div className="w-32 h-32 rounded-full border-4 border-indigo-500/30 animate-ping absolute inset-0"></div>
+                  <div className="w-32 h-32 rounded-full border-4 border-t-indigo-500 border-r-indigo-500/50 border-b-indigo-500/10 border-l-indigo-500/50 animate-spin"></div>
+                  <div className="absolute inset-0 flex items-center justify-center text-5xl">
+                      {partner ? partner.icon : '🛰️'}
                   </div>
               </div>
+              <h2 className="text-2xl font-mono font-bold text-white mb-2 animate-pulse">{lobbyStatus}</h2>
+              <p className="text-slate-500 text-sm">Searching for anonymous partner in your rank...</p>
+              
+              <button onClick={onExit} className="mt-12 text-slate-500 hover:text-white uppercase tracking-widest text-xs font-bold">Cancel Matchmaking</button>
           </div>
-          <div className="text-right">
-              <div className="text-2xl font-mono font-bold text-emerald-400">{height}m</div>
-          </div>
-      </div>
+      )}
 
-      {/* Canvas */}
-      <canvas 
-        ref={canvasRef} 
-        width={window.innerWidth > 450 ? 450 : window.innerWidth} 
-        height={window.innerHeight}
-        className="mx-auto shadow-2xl"
-      />
+      {/* PLAYING HUD */}
+      {gameState === 'playing' && (
+        <>
+            <div className="absolute top-4 left-4 right-4 flex justify-between z-10 pointer-events-none">
+                <div>
+                    <h2 className="text-xl font-bold font-serif text-white shadow-glow">Tethered</h2>
+                    <div className="flex space-x-4 text-xs mt-1 opacity-80">
+                        <div className="flex items-center space-x-1">
+                            <div className="w-3 h-3 bg-blue-400 rounded-sm"></div>
+                            <span>YOU (WASD)</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                            <div className="w-3 h-3 bg-pink-400 rounded-sm"></div>
+                            <span>PARTNER (Arrows)</span>
+                        </div>
+                    </div>
+                </div>
+                <div className="text-right">
+                    <div className="text-2xl font-mono font-bold text-emerald-400">{height}m</div>
+                </div>
+            </div>
+            <canvas 
+                ref={canvasRef} 
+                width={window.innerWidth > 450 ? 450 : window.innerWidth} 
+                height={window.innerHeight}
+                className="mx-auto shadow-2xl"
+            />
+        </>
+      )}
 
-      {/* Overlays */}
+      {/* GAME OVER SCREEN */}
       {(gameState === 'lost' || gameState === 'won') && (
           <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-sm flex flex-col items-center justify-center p-8 animate-fade-in z-20">
               <div className="text-6xl mb-4">{gameState === 'won' ? '🚀' : '💀'}</div>
@@ -278,16 +310,16 @@ export const TetheredGame: React.FC<TetheredGameProps> = ({ onExit }) => {
               
               <div className="space-y-3 w-full max-w-xs">
                   <button 
-                    onClick={() => window.location.reload()} // Quick restart hack for prototype
+                    onClick={() => setGameState('lobby')} 
                     className="w-full py-4 bg-white text-slate-900 rounded-xl font-bold hover:scale-105 transition-transform"
                   >
-                      Retry (-50pts)
+                      Find New Partner
                   </button>
                   <button 
                     onClick={onExit}
                     className="w-full py-4 border border-slate-700 text-slate-300 rounded-xl font-bold hover:bg-slate-800 transition-colors"
                   >
-                      Return to Lounge
+                      Return to Arcade
                   </button>
               </div>
           </div>
