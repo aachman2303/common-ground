@@ -152,33 +152,59 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ events, onAddEvent, 
 
       {viewMode === 'day' && (
         <div className="space-y-6 animate-fade-in pb-20">
-            {/* Analysis Card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden relative transition-all duration-300 hover:shadow-md">
-                <div className="p-5">
-                <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center space-x-2">
-                    <span className="text-xl animate-bounce" style={{ animationDuration: '2s' }}>📅</span>
-                    <h2 className="font-bold text-slate-800">Daily Insight</h2>
+            {/* AI Insight Generator */}
+            <div className="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl shadow-lg shadow-indigo-200 text-white relative overflow-hidden p-6">
+                {/* Decorative Background */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500/30 rounded-full blur-2xl -ml-10 -mb-10"></div>
+                
+                <div className="relative z-10">
+                    <div className="flex items-start justify-between">
+                        <div>
+                            <div className="flex items-center space-x-2 mb-1">
+                                <span className="text-xl">✨</span>
+                                <h2 className="font-serif font-bold text-lg">Campus Harmony AI</h2>
+                            </div>
+                            <p className="text-indigo-100 text-xs max-w-[200px] leading-relaxed">
+                                Analyze today's collective schedule to find the best times for connection.
+                            </p>
+                        </div>
+                        {insight ? (
+                             <button 
+                                onClick={() => setInsight(null)} 
+                                className="bg-white/20 hover:bg-white/30 p-2 rounded-full transition-colors"
+                             >
+                                <span className="text-xs">✕</span>
+                             </button>
+                        ) : (
+                            <button 
+                                onClick={handleAnalyze}
+                                disabled={analyzing}
+                                className="bg-white text-indigo-700 px-4 py-2 rounded-xl text-xs font-bold shadow-md hover:bg-indigo-50 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed flex items-center space-x-2"
+                            >
+                                {analyzing ? (
+                                    <>
+                                        <div className="w-3 h-3 border-2 border-indigo-300 border-t-indigo-700 rounded-full animate-spin"></div>
+                                        <span>Thinking...</span>
+                                    </>
+                                ) : (
+                                    <span>Reveal Patterns</span>
+                                )}
+                            </button>
+                        )}
                     </div>
-                    {analyzing ? (
-                    <div className="flex items-center space-x-2">
-                        <span className="text-xs font-bold text-brand-600 animate-pulse">Gemini Reading...</span>
-                    </div>
-                    ) : (
-                    <button 
-                        onClick={handleAnalyze}
-                        className="text-xs bg-brand-50 text-brand-600 px-3 py-1.5 rounded-full font-bold hover:bg-brand-100 transition-colors"
-                    >
-                        Analyze Pattern
-                    </button>
+
+                    {/* Result Display */}
+                    {insight && (
+                        <div className="mt-4 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4 animate-slide-up">
+                            <h3 className="font-bold text-sm mb-1 text-white flex items-center gap-2">
+                                <span>💡</span> {insight.title}
+                            </h3>
+                            <p className="text-xs text-indigo-50 leading-relaxed">
+                                {insight.insight}
+                            </p>
+                        </div>
                     )}
-                </div>
-                {insight && (
-                    <div className="bg-brand-50/50 rounded-xl p-4 animate-fade-in border border-brand-100">
-                    <h3 className="text-sm font-bold text-brand-800 mb-1">{insight.title}</h3>
-                    <p className="text-xs text-brand-700">{insight.insight}</p>
-                    </div>
-                )}
                 </div>
             </div>
 

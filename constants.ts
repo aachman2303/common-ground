@@ -1,4 +1,5 @@
-import { BuildingStatus, CheckInOption, ResourceItem, CalendarEvent, Community } from './types';
+
+import { BuildingStatus, CheckInOption, ResourceItem, CalendarEvent, Community, FeedPost } from './types';
 
 export const CHECK_IN_OPTIONS: CheckInOption[] = [
   { id: 'heavy_load', label: 'Heavy Academic Load', icon: '⚖️', count: 312 },
@@ -60,4 +61,50 @@ export const MOCK_COMMUNITIES: Community[] = [
   { id: 'c2', code: 'GMERS', name: 'Campus Gamers', description: 'Casual LoL and Valo matches.', members: 89, lat: 20, lng: 70, isPrivate: false, avatar: '🎮' },
   { id: 'c3', code: 'QUIET', name: 'Silent Reading', description: 'No talking, just reading.', members: 56, lat: 80, lng: 30, isPrivate: true, avatar: '🤫' },
   { id: 'c4', code: 'COFFEE', name: 'Caffeine Addicts', description: 'Reviewing every coffee shop.', members: 210, lat: 40, lng: 20, isPrivate: false, avatar: '☕' },
+];
+
+export const MOCK_FEED_POSTS: FeedPost[] = [
+  {
+    id: '1',
+    type: 'poll',
+    author: 'CampusPulse',
+    avatarIcon: '📊',
+    timestamp: '20m ago',
+    content: {
+      text: 'Current Status Check 🌡️',
+      options: [
+        { label: 'Grinding 📚', votes: 145 },
+        { label: 'Procrastinating 🤡', votes: 89 },
+        { label: 'Nap Time 😴', votes: 34 }
+      ]
+    },
+    likes: 230,
+    comments: 12
+  },
+  {
+    id: '2',
+    type: 'confession',
+    author: 'Anonymous',
+    avatarIcon: '😶',
+    timestamp: '1h ago',
+    content: {
+      text: "I just sat in the library for 3 hours and did nothing but make my Spotify playlist perfect. Send help.",
+      color: 'bg-stone-800 text-white'
+    },
+    likes: 412,
+    comments: 56
+  },
+  {
+    id: '3',
+    type: 'image',
+    author: 'StudyAesthetic',
+    avatarIcon: '✨',
+    timestamp: '2h ago',
+    content: {
+      text: 'Rainy day study vibes in the Engineering Hall 🌧️☕',
+      imageUrl: 'https://images.unsplash.com/photo-1507914372368-b2b003618950?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+    },
+    likes: 89,
+    comments: 4
+  }
 ];

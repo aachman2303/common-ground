@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { getStudyMotivation } from '../services/geminiService';
 import { AVATARS } from '../constants';
@@ -14,6 +15,13 @@ const AMBIENT_SOUNDS = [
   { id: 'fire', label: 'Fire', icon: '🔥', url: 'https://assets.mixkit.co/active_storage/sfx/1330/1330-preview.mp3' },
 ];
 
+const VIBES = [
+    { id: 'default', label: 'Clean', color: 'bg-white' },
+    { id: 'lofi', label: 'Lo-Fi', color: 'bg-purple-50/50' },
+    { id: 'dark', label: 'Night', color: 'bg-stone-800 text-white' },
+    { id: 'nature', label: 'Nature', color: 'bg-green-50/50' }
+];
+
 export const StudyRoom: React.FC<StudyRoomProps> = ({ user, onSessionComplete }) => {
   const [isActive, setIsActive] = useState(false);
   const [initialTime, setInitialTime] = useState(25 * 60);
@@ -27,6 +35,7 @@ export const StudyRoom: React.FC<StudyRoomProps> = ({ user, onSessionComplete })
   const [volume, setVolume] = useState(0.5);
   const [selectedBadge, setSelectedBadge] = useState<string | null>(null);
   const [sessionCompleted, setSessionCompleted] = useState(false);
+  const [currentVibe, setCurrentVibe] = useState('default');
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Stats for badges
@@ -58,8 +67,6 @@ export const StudyRoom: React.FC<StudyRoomProps> = ({ user, onSessionComplete })
       setIsActive(false);
       onSessionComplete(initialTime / 60);
       setSessionCompleted(true);
-      // Optional: Stop sound on complete
-      // if (audioRef.current) audioRef.current.pause();
     }
     return () => clearInterval(interval);
   }, [isActive, timeLeft, initialTime, onSessionComplete]);
@@ -109,12 +116,9 @@ export const StudyRoom: React.FC<StudyRoomProps> = ({ user, onSessionComplete })
   const startRoulette = () => {
     setRouletteMode('searching');
     setTimeout(() => {
-        // Randomly select a buddy
         const randomAvatar = AVATARS[Math.floor(Math.random() * AVATARS.length)];
         setBuddy(randomAvatar);
         setRouletteMode('matched');
-        
-        // Enforce 30-minute session for Roulette
         const sessionDuration = 30 * 60;
         setInitialTime(sessionDuration);
         setTimeLeft(sessionDuration);
@@ -156,8 +160,11 @@ export const StudyRoom: React.FC<StudyRoomProps> = ({ user, onSessionComplete })
     }
   };
 
+  const activeVibeObj = VIBES.find(v => v.id === currentVibe) || VIBES[0];
+  const isDarkMode = currentVibe === 'dark';
+
   return (
-    <div className="space-y-6 flex flex-col min-h-full animate-appear relative">
+    <div className={`space-y-6 flex flex-col min-h-full animate-appear relative transition-colors duration-500 rounded-3xl p-4 ${activeVibeObj.color}`}>
       
       {/* Session Completed Overlay */}
       {sessionCompleted && (
@@ -185,22 +192,30 @@ export const StudyRoom: React.FC<StudyRoomProps> = ({ user, onSessionComplete })
         </div>
       )}
 
-      {/* Header */}
-      <div className="text-center space-y-1">
-        <h2 className="text-lg font-serif font-bold text-stone-700">Sanctuary of Focus</h2>
-        <div className="flex justify-center items-center space-x-3">
-            <div className="inline-flex items-center space-x-2 bg-white px-3 py-1 rounded-full shadow-sm border border-stone-100">
-                <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
-                <span className="text-xs font-bold text-stone-500 uppercase tracking-wide">8 Present</span>
+      {/* Header & Vibe Check */}
+      <div className="flex justify-between items-center">
+         <div>
+            <h2 className={`text-lg font-serif font-bold ${isDarkMode ? 'text-white' : 'text-stone-700'}`}>Sanctuary</h2>
+            <div className={`text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-stone-400' : 'text-stone-400'}`}>
+                Focus Mode
             </div>
-            <div className="inline-flex items-center space-x-1 px-2 py-0.5 rounded border border-yellow-100 bg-yellow-50">
-                 <span className="text-[9px] font-bold text-yellow-600 uppercase">Powered by Google Meet API</span>
-            </div>
-        </div>
+         </div>
+         <div className="flex space-x-1 bg-black/5 p-1 rounded-full">
+            {VIBES.map(v => (
+                <button 
+                    key={v.id}
+                    onClick={() => setCurrentVibe(v.id)}
+                    className={`w-6 h-6 rounded-full text-[10px] flex items-center justify-center transition-all ${currentVibe === v.id ? 'bg-white shadow-sm scale-110 text-stone-800' : 'text-transparent hover:bg-white/50'}`}
+                    title={v.label}
+                >
+                    {v.id === 'default' ? '☀️' : v.id === 'lofi' ? '🟣' : v.id === 'dark' ? '🌙' : '🌿'}
+                </button>
+            ))}
+         </div>
       </div>
 
       {/* Roulette */}
-      <div className="min-h-[140px] bg-white/60 backdrop-blur rounded-3xl p-4 flex items-center justify-center border border-white shadow-soft relative overflow-hidden transition-all duration-500">
+      <div className={`min-h-[140px] backdrop-blur rounded-3xl p-4 flex items-center justify-center border shadow-soft relative overflow-hidden transition-all duration-500 ${isDarkMode ? 'bg-white/10 border-white/10' : 'bg-white/60 border-white'}`}>
         {rouletteMode === 'idle' && (
            <div className="flex flex-col items-center space-y-4 animate-fade-in">
              <div className="flex -space-x-4 items-end justify-center h-14">
@@ -260,7 +275,7 @@ export const StudyRoom: React.FC<StudyRoomProps> = ({ user, onSessionComplete })
           <svg width={size} height={size} className="absolute transform -rotate-90">
              {/* Background Circle */}
              <circle
-                stroke="#e7e5e4" // stone-200
+                stroke={isDarkMode ? '#44403c' : '#e7e5e4'} 
                 strokeWidth={strokeWidth}
                 fill="transparent"
                 r={radius}
@@ -283,8 +298,8 @@ export const StudyRoom: React.FC<StudyRoomProps> = ({ user, onSessionComplete })
           </svg>
           
           {/* Center Content */}
-          <div className="flex flex-col items-center z-10 bg-white w-48 h-48 rounded-full justify-center shadow-soft border border-stone-50">
-            <span className="text-5xl font-serif font-bold text-brand-800 tracking-tight font-variant-numeric tabular-nums">
+          <div className={`flex flex-col items-center z-10 w-48 h-48 rounded-full justify-center shadow-soft border ${isDarkMode ? 'bg-stone-900 border-stone-700 text-white' : 'bg-white border-stone-50'}`}>
+            <span className={`text-5xl font-serif font-bold tracking-tight font-variant-numeric tabular-nums ${isDarkMode ? 'text-white' : 'text-brand-800'}`}>
               {formatTime(timeLeft)}
             </span>
             <span className="text-xs text-brand-400 font-bold uppercase tracking-widest mt-1">
@@ -312,7 +327,7 @@ export const StudyRoom: React.FC<StudyRoomProps> = ({ user, onSessionComplete })
                     className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xs font-bold transition-all ${
                         initialTime === mins * 60
                         ? 'bg-brand-600 text-white shadow-lg shadow-brand-200 transform scale-110'
-                        : 'bg-white text-stone-400 hover:bg-stone-50'
+                        : isDarkMode ? 'bg-stone-800 text-stone-400 hover:bg-stone-700' : 'bg-white text-stone-400 hover:bg-stone-50'
                     }`}
                 >
                     {mins}
@@ -324,7 +339,7 @@ export const StudyRoom: React.FC<StudyRoomProps> = ({ user, onSessionComplete })
       {/* Motivation */}
       <div className="min-h-[40px] text-center px-6">
          {motivation ? (
-           <p className="text-sm font-serif italic text-stone-600 animate-fade-in">"{motivation}"</p>
+           <p className={`text-sm font-serif italic animate-fade-in ${isDarkMode ? 'text-stone-300' : 'text-stone-600'}`}>"{motivation}"</p>
          ) : (
            <button 
             onClick={handleGetMotivation}
@@ -336,47 +351,8 @@ export const StudyRoom: React.FC<StudyRoomProps> = ({ user, onSessionComplete })
          )}
       </div>
 
-      {/* Achievements - Compact & Accessible */}
-      <div className="py-2 animate-fade-in">
-         <div className="flex items-center justify-between px-2 mb-2">
-             <h3 className="text-xs font-bold text-stone-400 uppercase tracking-widest flex items-center gap-1">
-                <span>🏆</span> Milestones
-             </h3>
-             <span className="text-[10px] text-stone-400 bg-stone-100 px-2 py-0.5 rounded-full">
-                {ACHIEVEMENTS.filter(a => a.unlocked).length}/{ACHIEVEMENTS.length}
-             </span>
-         </div>
-         <div className="flex space-x-3 overflow-x-auto pb-4 px-1 scrollbar-hide snap-x">
-            {ACHIEVEMENTS.map((badge) => (
-                <button
-                    key={badge.id}
-                    onClick={() => setSelectedBadge(selectedBadge === badge.id ? null : badge.id)}
-                    className={`relative flex-shrink-0 w-12 h-12 rounded-xl flex flex-col items-center justify-center transition-all duration-300 snap-center focus:outline-none focus:ring-2 focus:ring-brand-300 ${
-                        badge.unlocked 
-                          ? (selectedBadge === badge.id ? 'bg-brand-600 text-white shadow-lg scale-105 z-10' : 'bg-white border border-stone-100 text-brand-500 hover:border-brand-200')
-                          : 'bg-stone-50 text-stone-300 cursor-not-allowed border border-transparent'
-                    }`}
-                    aria-label={`${badge.label}: ${badge.desc}`}
-                    aria-expanded={selectedBadge === badge.id}
-                >
-                    <span className={`text-lg ${!badge.unlocked && 'grayscale opacity-50'}`}>{badge.icon}</span>
-                    {!badge.unlocked && <span className="absolute bottom-0.5 right-0.5 text-[8px]">🔒</span>}
-                    
-                    {selectedBadge === badge.id && (
-                       <div className="absolute -bottom-14 left-1/2 transform -translate-x-1/2 w-40 bg-stone-800 text-white text-[10px] p-2 rounded-lg text-center z-50 pointer-events-none animate-appear shadow-xl leading-tight">
-                           <div className="font-bold text-brand-100 mb-0.5">{badge.label}</div>
-                           <div className="font-normal opacity-90">{badge.desc}</div>
-                           <div className="text-[9px] text-stone-400 mt-1">{badge.unlocked ? 'Unlocked' : 'Locked'}</div>
-                           <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-stone-800 rotate-45"></div>
-                       </div>
-                    )}
-                </button>
-            ))}
-         </div>
-      </div>
-
       {/* Sounds */}
-      <div className="bg-white p-5 rounded-3xl shadow-soft space-y-4">
+      <div className={`p-5 rounded-3xl shadow-soft space-y-4 ${isDarkMode ? 'bg-stone-800' : 'bg-white'}`}>
         <div className="flex justify-between items-center px-1">
            <h3 className="text-xs font-bold text-stone-400 uppercase tracking-widest">Ambiance</h3>
            {activeSoundId && (
@@ -397,7 +373,7 @@ export const StudyRoom: React.FC<StudyRoomProps> = ({ user, onSessionComplete })
                 className={`flex-1 py-4 rounded-2xl transition-all duration-300 flex flex-col items-center justify-center space-y-1 ${
                   isActive 
                     ? 'bg-brand-50 text-brand-800 ring-2 ring-brand-100 shadow-inner' 
-                    : 'bg-stone-50 text-stone-400 hover:bg-stone-100'
+                    : isDarkMode ? 'bg-stone-700 text-stone-400 hover:bg-stone-600' : 'bg-stone-50 text-stone-400 hover:bg-stone-100'
                 }`}
               >
                 <span className={`text-xl ${isActive && isPlayingSound ? 'animate-pulse' : ''}`}>{sound.icon}</span>
@@ -426,7 +402,7 @@ export const StudyRoom: React.FC<StudyRoomProps> = ({ user, onSessionComplete })
                 setBuddy(null);
                 setIsActive(false);
             }}
-            className="w-14 flex items-center justify-center bg-white text-stone-400 rounded-2xl hover:text-red-400 transition-colors shadow-sm"
+            className={`w-14 flex items-center justify-center rounded-2xl transition-colors shadow-sm ${isDarkMode ? 'bg-stone-800 text-stone-400 hover:text-red-400' : 'bg-white text-stone-400 hover:text-red-400'}`}
         >
           ✕
         </button>

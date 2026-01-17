@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { UserProfile, RankInfo } from '../types';
 import { AVATARS } from '../constants';
@@ -22,60 +23,16 @@ const TECH_STACK = [
     color: "bg-indigo-50 text-indigo-600",
     techs: ["Vertex AI", "Gemini API", "Dialogflow", "TensorFlow.js"]
   },
-  {
-    title: "AI Safety & Moderation",
-    icon: "🛡️",
-    color: "bg-rose-50 text-rose-600",
-    techs: ["Perspective API", "Recommendations AI"]
-  },
-  {
-    title: "Language & Vision",
-    icon: "👁️",
-    color: "bg-teal-50 text-teal-600",
-    techs: ["Natural Language API", "Vision AI"]
-  },
-  {
-    title: "Predictive Intelligence",
-    icon: "🔮",
-    color: "bg-fuchsia-50 text-fuchsia-600",
-    techs: ["Vertex AI Forecasting", "AutoML Tables", "Anomaly Detection"]
-  },
-  {
-    title: "Cloud & Infrastructure",
-    icon: "☁️",
-    color: "bg-blue-50 text-blue-600",
-    techs: ["Firebase", "Cloud Run", "Cloud Spanner", "Cloud SQL", "Cloud CDN", "VPC Service Controls"]
-  },
-  {
-    title: "Maps & Geolocation",
-    icon: "🗺️",
-    color: "bg-green-50 text-green-600",
-    techs: ["Google Maps Platform", "Places API", "Geocoding API", "Heatmaps"]
-  },
-  {
-    title: "Workspace & Productivity",
-    icon: "📚",
-    color: "bg-yellow-50 text-yellow-600",
-    techs: ["Calendar API", "Gmail API", "Google Meet API", "Drive API"]
-  },
-  {
-    title: "Data & Analytics",
-    icon: "📊",
-    color: "bg-purple-50 text-purple-600",
-    techs: ["Google Analytics 4", "Looker Studio", "BigQuery", "Cloud Monitoring"]
-  },
-  {
-    title: "Security & Identity",
-    icon: "🔐",
-    color: "bg-slate-50 text-slate-600",
-    techs: ["Cloud Identity", "reCAPTCHA Enterprise", "Secret Manager", "Cloud Armor"]
-  },
-  {
-    title: "Development & Deployment",
-    icon: "🛠️",
-    color: "bg-orange-50 text-orange-600",
-    techs: ["Cloud Build", "Artifact Registry", "Cloud Deploy"]
-  }
+  // ... existing items kept for brevity, structure remains ...
+  { title: "AI Safety & Moderation", icon: "🛡️", color: "bg-rose-50 text-rose-600", techs: ["Perspective API", "Recommendations AI"] },
+  { title: "Language & Vision", icon: "👁️", color: "bg-teal-50 text-teal-600", techs: ["Natural Language API", "Vision AI"] },
+  { title: "Predictive Intelligence", icon: "🔮", color: "bg-fuchsia-50 text-fuchsia-600", techs: ["Vertex AI Forecasting", "AutoML Tables", "Anomaly Detection"] },
+  { title: "Cloud & Infrastructure", icon: "☁️", color: "bg-blue-50 text-blue-600", techs: ["Firebase", "Cloud Run", "Cloud Spanner", "Cloud SQL", "Cloud CDN", "VPC Service Controls"] },
+  { title: "Maps & Geolocation", icon: "🗺️", color: "bg-green-50 text-green-600", techs: ["Google Maps Platform", "Places API", "Geocoding API", "Heatmaps"] },
+  { title: "Workspace & Productivity", icon: "📚", color: "bg-yellow-50 text-yellow-600", techs: ["Calendar API", "Gmail API", "Google Meet API", "Drive API"] },
+  { title: "Data & Analytics", icon: "📊", color: "bg-purple-50 text-purple-600", techs: ["Google Analytics 4", "Looker Studio", "BigQuery", "Cloud Monitoring"] },
+  { title: "Security & Identity", icon: "🔐", color: "bg-slate-50 text-slate-600", techs: ["Cloud Identity", "reCAPTCHA Enterprise", "Secret Manager", "Cloud Armor"] },
+  { title: "Development & Deployment", icon: "🛠️", color: "bg-orange-50 text-orange-600", techs: ["Cloud Build", "Artifact Registry", "Cloud Deploy"] }
 ];
 
 export const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
@@ -105,6 +62,15 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
     { id: 'sage', icon: '🦉', label: 'Campus Sage', desc: '1000+ Mins Total', unlocked: stats.focusMinutes >= 1000 },
   ];
 
+  // Garden Logic
+  const getPlantStage = () => {
+      if (stats.streakDays < 3) return { icon: '🌱', label: 'Seedling Phase', msg: "Needs consistency to grow." };
+      if (stats.streakDays < 7) return { icon: '🌿', label: 'Sprouting Phase', msg: "Growing strong!" };
+      if (stats.streakDays < 14) return { icon: '🌸', label: 'Flowering Phase', msg: "Beautiful progress." };
+      return { icon: '🌳', label: 'Thriving Phase', msg: "An ancient campus guardian." };
+  };
+  const plant = getPlantStage();
+
   return (
     <div className="space-y-6 animate-slide-up pb-24 relative">
       {/* Header Card */}
@@ -132,28 +98,33 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
              <h2 className="text-3xl font-serif font-bold text-stone-800 tracking-tight">{user.nickname}</h2>
              <p className="text-sm text-stone-400 font-mono tracking-wider mb-6 bg-stone-50 inline-block px-3 py-1 rounded-full mt-2 border border-stone-100">{user.uniqueId}</p>
              
-             {/* Rank Display */}
-             <div className="bg-white/80 backdrop-blur-md rounded-2xl p-4 border border-stone-100 shadow-sm w-full">
-                <div className="flex justify-between items-center text-sm font-bold mb-2">
-                    <span className="text-brand-700 flex items-center gap-2">
-                        <span className="text-xl">{currentRank.icon}</span> {currentRank.title}
+             {/* Garden Display (Visual Streak) */}
+             <div className="bg-gradient-to-br from-brand-50 to-stone-50 rounded-2xl p-4 border border-brand-100 shadow-sm w-full relative overflow-hidden">
+                <div className="flex justify-between items-center text-sm font-bold mb-2 relative z-10">
+                    <span className="text-brand-800 flex items-center gap-2">
+                        My Garden
                     </span>
-                    {nextRank && (
-                        <span className="text-stone-400 text-xs uppercase tracking-wider">Next: {nextRank.title}</span>
-                    )}
+                    <span className="bg-white px-2 py-0.5 rounded-full text-[10px] text-brand-600 border border-brand-200 shadow-sm">{stats.streakDays} Day Streak</span>
                 </div>
-                <div className="relative w-full h-3 bg-stone-100 rounded-full overflow-hidden shadow-inner">
-                    <div 
-                        className="absolute top-0 left-0 h-full bg-gradient-to-r from-brand-400 to-brand-600 rounded-full transition-all duration-1000 ease-out"
-                        style={{ width: `${progressToNext}%` }}
-                    >
-                         <div className="absolute inset-0 bg-white/30 animate-[shimmer_2s_infinite]"></div>
+                <div className="flex items-center justify-between relative z-10">
+                    <div className="text-left">
+                        <div className="text-4xl mb-1 filter drop-shadow-sm animate-float">{plant.icon}</div>
+                        <div className="text-xs font-bold text-stone-700">{plant.label}</div>
+                        <div className="text-[10px] text-stone-400 italic">"{plant.msg}"</div>
+                    </div>
+                    
+                    {/* Progress Circle for Next Stage */}
+                    <div className="relative w-16 h-16 flex items-center justify-center">
+                        <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                            <path className="text-brand-100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="4" />
+                            <path className="text-brand-500" strokeDasharray={`${Math.min(100, (stats.streakDays / 14) * 100)}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                        </svg>
+                        <span className="absolute text-[10px] font-bold text-brand-700">Level {Math.floor(stats.streakDays / 3) + 1}</span>
                     </div>
                 </div>
-                <div className="flex justify-between mt-2 text-[10px] font-bold text-stone-400 uppercase tracking-widest">
-                    <span>{currentMinutes} mins</span>
-                    <span>{nextRank ? nextRank.minMinutes : 'MAX'} mins</span>
-                </div>
+                
+                {/* Decorative background elements */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-brand-100/50 rounded-full blur-2xl -mr-10 -mt-10"></div>
              </div>
          </div>
       </div>
@@ -187,17 +158,6 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
                       <div className="w-10 h-10 rounded-full bg-yellow-50 text-yellow-600 flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">✨</div>
                       <div className="text-2xl font-bold text-stone-800 font-serif">{user.stats?.communityPoints || 0}</div>
                       <div className="text-[10px] text-stone-400 uppercase tracking-widest font-bold mt-1">Karma Points</div>
-                  </div>
-                  <div className="col-span-2 bg-gradient-to-r from-orange-50 to-red-50 p-5 rounded-2xl border border-orange-100 shadow-sm">
-                      <div className="flex items-center justify-between">
-                         <div className="flex items-center gap-4">
-                            <div className="text-3xl animate-pulse">🔥</div>
-                            <div>
-                                <div className="text-xl font-bold text-stone-800 font-serif">{user.stats?.streakDays || 0} Day Streak</div>
-                                <div className="text-[10px] text-orange-600/70 font-bold uppercase tracking-widest">Consistency is key</div>
-                            </div>
-                         </div>
-                      </div>
                   </div>
               </div>
 

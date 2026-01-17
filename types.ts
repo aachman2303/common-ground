@@ -99,16 +99,24 @@ export interface RankInfo {
   nextRank?: string;
 }
 
-// New Types for Social Lounge
-export interface Meme {
+// Social Lounge Types
+export type FeedPostType = 'image' | 'poll' | 'confession';
+
+export interface FeedPost {
   id: string;
-  imageUrl: string;
-  caption: string;
-  uploader: string;
+  type: FeedPostType;
+  author: string;
+  avatarIcon?: string;
+  timestamp: string;
+  content: {
+    text?: string;
+    imageUrl?: string;
+    options?: { label: string; votes: number }[]; // For polls
+    color?: string; // For confessions
+  };
   likes: number;
-  laughs: number;
-  hearts: number;
-  timestamp: Date;
+  comments: number;
+  isLiked?: boolean;
 }
 
 export interface LeaderboardEntry {
