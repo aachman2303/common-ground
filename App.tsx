@@ -16,6 +16,8 @@ import { OneOnOneChat } from './components/OneOnOneChat';
 import { Profile } from './components/Profile';
 import { AiCompanion } from './components/AiCompanion';
 import { SocialLounge } from './components/SocialLounge';
+import { CoopGame } from './components/CoopGame';
+import { TetheredGame } from './components/TetheredGame';
 import { ViewState, UserProfile, CalendarEvent, Community, ActiveReward } from './types';
 import { MOCK_EVENTS, MOCK_COMMUNITIES } from './constants';
 
@@ -87,6 +89,21 @@ const App: React.FC = () => {
 
   const handleCreateCommunity = (newCommunity: Community) => {
     setCommunities([newCommunity, ...communities]);
+  };
+
+  const handleStartTethered = () => {
+      if (user && user.stats.communityPoints >= 50) {
+          setUser({
+              ...user,
+              stats: {
+                  ...user.stats,
+                  communityPoints: user.stats.communityPoints - 50
+              }
+          });
+          navigate(ViewState.TETHERED_GAME);
+      } else {
+          alert("You need 50 Karma Points to enter the Tethered Trials.");
+      }
   };
 
   const handleSessionComplete = (minutes: number) => {
@@ -174,10 +191,15 @@ const App: React.FC = () => {
             else navigate(ViewState.HEATMAP);
         }} />;
       case ViewState.ONE_ON_ONE_CHAT:
-        return <OneOnOneChat userMood={userMood} onExit={() => {
-             if (history.length > 0) goBack();
-             else navigate(ViewState.HEATMAP);
-        }} />;
+        return <OneOnOneChat 
+            userMood={userMood} 
+            onExit={() => navigate(ViewState.HEATMAP)}
+            onPlayGame={handleStartTethered}
+        />;
+      case ViewState.COOP_GAME:
+        return <CoopGame onExit={() => navigate(ViewState.SOCIAL_LOUNGE)} />;
+      case ViewState.TETHERED_GAME:
+        return <TetheredGame onExit={() => navigate(ViewState.SOCIAL_LOUNGE)} />;
       case ViewState.PROFILE:
         return user ? <Profile user={user} onLogout={() => setUser(null)} /> : <div>Log in</div>;
       default:

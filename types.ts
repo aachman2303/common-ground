@@ -12,7 +12,9 @@ export enum ViewState {
   PULSE_CHAT = 'PULSE_CHAT',
   ONE_ON_ONE_CHAT = 'ONE_ON_ONE_CHAT',
   PROFILE = 'PROFILE',
-  SOCIAL_LOUNGE = 'SOCIAL_LOUNGE', // New View
+  SOCIAL_LOUNGE = 'SOCIAL_LOUNGE',
+  COOP_GAME = 'COOP_GAME', 
+  TETHERED_GAME = 'TETHERED_GAME', // New Physics Game
 }
 
 export interface UserStats {

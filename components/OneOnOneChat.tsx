@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { CHECK_IN_OPTIONS, AVATARS } from '../constants';
 import { getPeerGreeting, getPeerReply } from '../services/geminiService';
@@ -5,6 +6,7 @@ import { getPeerGreeting, getPeerReply } from '../services/geminiService';
 interface OneOnOneChatProps {
   userMood: string | null;
   onExit: () => void;
+  onPlayGame?: () => void;
 }
 
 interface Message {
@@ -14,7 +16,7 @@ interface Message {
   timestamp: Date;
 }
 
-export const OneOnOneChat: React.FC<OneOnOneChatProps> = ({ userMood, onExit }) => {
+export const OneOnOneChat: React.FC<OneOnOneChatProps> = ({ userMood, onExit, onPlayGame }) => {
   const [status, setStatus] = useState<'searching' | 'connected' | 'ended'>('searching');
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
@@ -86,7 +88,6 @@ export const OneOnOneChat: React.FC<OneOnOneChatProps> = ({ userMood, onExit }) 
 
   const handleLeave = () => {
       setStatus('ended');
-      setTimeout(onExit, 1000);
   };
 
   return (
@@ -109,10 +110,30 @@ export const OneOnOneChat: React.FC<OneOnOneChatProps> = ({ userMood, onExit }) 
       )}
 
       {status === 'ended' && (
-          <div className="absolute inset-0 z-20 bg-slate-900/90 backdrop-blur flex flex-col items-center justify-center text-center p-6 animate-fade-in">
-              <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center text-2xl mb-4">👋</div>
-              <h2 className="text-xl font-bold text-white">Chat Ended</h2>
-              <p className="text-slate-400 text-sm mt-2">Hope you feel a little lighter.</p>
+          <div className="absolute inset-0 z-20 bg-slate-900/95 backdrop-blur flex flex-col items-center justify-center text-center p-8 animate-fade-in space-y-6">
+              <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center text-3xl mb-2">👋</div>
+              <div>
+                <h2 className="text-2xl font-bold text-white font-serif">Chat Ended</h2>
+                <p className="text-slate-400 text-sm mt-2">Hope you feel a little lighter.</p>
+              </div>
+
+              <div className="w-full space-y-3 pt-4">
+                  {onPlayGame && (
+                      <button 
+                        onClick={onPlayGame}
+                        className="w-full py-4 bg-gradient-to-r from-brand-600 to-teal-600 text-white rounded-2xl font-bold shadow-lg shadow-brand-900/50 hover:scale-[1.02] transition-transform flex items-center justify-center space-x-2 border border-white/10"
+                      >
+                          <span>Play Harmony Ripple</span>
+                          <span>🌊</span>
+                      </button>
+                  )}
+                  <button 
+                    onClick={onExit}
+                    className="w-full py-3 bg-slate-800 text-slate-300 rounded-2xl font-bold hover:bg-slate-700 transition-colors"
+                  >
+                    Return to Map
+                  </button>
+              </div>
           </div>
       )}
 

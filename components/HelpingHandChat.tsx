@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { AVATARS } from '../constants';
 
@@ -18,7 +19,6 @@ export const HelpingHandChat: React.FC<HelpingHandChatProps> = ({ role, onExit }
   const [input, setInput] = useState('');
   const [showFeedback, setShowFeedback] = useState(false);
   const [rating, setRating] = useState(0);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -78,12 +78,14 @@ export const HelpingHandChat: React.FC<HelpingHandChatProps> = ({ role, onExit }
                   </div>
               )}
 
-              <button 
-                onClick={onExit}
-                className="w-full py-3 bg-brand-600 text-white rounded-xl font-bold shadow-lg shadow-brand-200"
-              >
-                  {role === 'vent' ? "Submit & Close" : "Return to Lounge"}
-              </button>
+              <div className="space-y-3">
+                  <button 
+                    onClick={onExit}
+                    className="w-full py-3 bg-brand-600 text-white rounded-xl font-bold shadow-lg shadow-brand-200"
+                  >
+                      {role === 'vent' ? "Submit & Close" : "Return to Lounge"}
+                  </button>
+              </div>
           </div>
       );
   }
