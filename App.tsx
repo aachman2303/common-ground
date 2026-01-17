@@ -142,7 +142,11 @@ const App: React.FC = () => {
           navigate(ViewState.HEATMAP);
         }} />;
       case ViewState.HEATMAP:
-        return <Heatmap onViewChange={navigate} userSignal={userMood} />;
+        return <Heatmap 
+            onViewChange={navigate} 
+            userSignal={userMood} 
+            onPulseChat={() => navigate(ViewState.PULSE_CHAT)}
+        />;
       case ViewState.STUDY_ROOM:
         return <StudyRoom user={user} onSessionComplete={handleSessionComplete} />;
       case ViewState.CALENDAR:

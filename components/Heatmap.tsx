@@ -3,13 +3,15 @@ import React, { useState, useEffect } from 'react';
 import { BUILDINGS, CHECK_IN_OPTIONS } from '../constants';
 import { ViewState } from '../types';
 import { getSharedRealityInsight, getCollectiveMoodPrompt } from '../services/geminiService';
+import { MessageCircle, Zap } from 'lucide-react';
 
 interface HeatmapProps {
   onViewChange: (view: ViewState) => void;
   userSignal: string | null;
+  onPulseChat?: () => void;
 }
 
-export const Heatmap: React.FC<HeatmapProps> = ({ onViewChange, userSignal }) => {
+export const Heatmap: React.FC<HeatmapProps> = ({ onViewChange, userSignal, onPulseChat }) => {
   const [selectedBuilding, setSelectedBuilding] = useState<string | null>(null);
   const [realityInsight, setRealityInsight] = useState<string>("");
   const [microPrompt, setMicroPrompt] = useState<string>("");
@@ -93,17 +95,33 @@ export const Heatmap: React.FC<HeatmapProps> = ({ onViewChange, userSignal }) =>
           </div>
 
           {currentSignal && (
-            <div className="bg-stone-50/80 rounded-2xl p-4 border border-stone-100 flex items-center space-x-4">
-               <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-2xl border border-stone-100">
-                   {currentSignal.icon}
+            <div className="bg-stone-50/80 rounded-2xl p-4 border border-stone-100 flex flex-col space-y-4">
+               <div className="flex items-center space-x-4">
+                   <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-2xl border border-stone-100">
+                       {currentSignal.icon}
+                   </div>
+                   <div>
+                     <p className="text-xs text-stone-400 font-bold uppercase tracking-wider mb-0.5">Your Context</p>
+                     <p className="text-sm font-bold text-stone-700">
+                       <span className="text-brand-600 text-lg mr-1">{currentSignal.count + 1}</span> 
+                       students also reported <span className="italic">{currentSignal.label}</span>.
+                     </p>
+                   </div>
                </div>
-               <div>
-                 <p className="text-xs text-stone-400 font-bold uppercase tracking-wider mb-0.5">Your Context</p>
-                 <p className="text-sm font-bold text-stone-700">
-                   <span className="text-brand-600 text-lg mr-1">{currentSignal.count + 1}</span> 
-                   students also reported <span className="italic">{currentSignal.label}</span>.
-                 </p>
-               </div>
+               
+               {/* Pulse Active Action */}
+               {onPulseChat && (
+                   <button 
+                     onClick={onPulseChat}
+                     className="w-full py-3 bg-white border border-brand-200 text-brand-700 rounded-xl font-bold text-sm shadow-sm hover:bg-brand-50 hover:border-brand-300 transition-all flex items-center justify-center space-x-2 group"
+                   >
+                       <div className="bg-brand-100 p-1.5 rounded-lg group-hover:bg-brand-200 transition-colors">
+                           <MessageCircle size={16} />
+                       </div>
+                       <span>Enter Pulse Room</span>
+                       <Zap size={14} className="text-amber-500" />
+                   </button>
+               )}
             </div>
           )}
         </div>

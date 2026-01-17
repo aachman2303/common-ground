@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { ViewState } from '../types';
 import { CHECK_IN_OPTIONS, AVATARS } from '../constants';
@@ -23,6 +24,7 @@ export const PulseChat: React.FC<PulseChatProps> = ({ userMood, onExit }) => {
   const [input, setInput] = useState('');
   const [icebreaker, setIcebreaker] = useState('');
   const [peerCount, setPeerCount] = useState(0);
+  const [typingPeers, setTypingPeers] = useState<number>(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const signal = CHECK_IN_OPTIONS.find(o => o.id === userMood) || CHECK_IN_OPTIONS[0];
@@ -35,14 +37,19 @@ export const PulseChat: React.FC<PulseChatProps> = ({ userMood, onExit }) => {
     }, 1000);
 
     const mockInterval = setInterval(() => {
-        if (Math.random() > 0.7) {
-            const randomAvatar = AVATARS[Math.floor(Math.random() * AVATARS.length)];
-            const mockResponses = [
-                "Yeah, same here.", "Library is packed.", "Just need to finish this.", "Coffee?", "We got this.", "Glad it's not just me."
-            ];
-            addPeerMessage(randomAvatar.icon, mockResponses[Math.floor(Math.random() * mockResponses.length)]);
+        if (Math.random() > 0.6) {
+            // Simulate typing
+            setTypingPeers(prev => prev + 1);
+            setTimeout(() => {
+                setTypingPeers(prev => Math.max(0, prev - 1));
+                const randomAvatar = AVATARS[Math.floor(Math.random() * AVATARS.length)];
+                const mockResponses = [
+                    "Yeah, same here.", "Library is packed.", "Just need to finish this.", "Coffee?", "We got this.", "Glad it's not just me.", "Anyone else taking Chem 101?", "I'm so tired."
+                ];
+                addPeerMessage(randomAvatar.icon, mockResponses[Math.floor(Math.random() * mockResponses.length)]);
+            }, 1500 + Math.random() * 1000);
         }
-    }, 5000);
+    }, 4000);
     return () => clearInterval(mockInterval);
   }, [signal]);
 
@@ -56,7 +63,7 @@ export const PulseChat: React.FC<PulseChatProps> = ({ userMood, onExit }) => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, typingPeers]);
 
   const addSystemMessage = (text: string) => {
     setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'System', avatarIcon: '⚙️', text, isUser: false, isSystem: true }]);
@@ -92,7 +99,7 @@ export const PulseChat: React.FC<PulseChatProps> = ({ userMood, onExit }) => {
             </div>
         </div>
         <div className="text-right">
-             <div className="font-mono font-bold text-stone-700">{formatTime(timeLeft)}</div>
+             <div className={`font-mono font-bold ${timeLeft < 60 ? 'text-red-500' : 'text-stone-700'}`}>{formatTime(timeLeft)}</div>
              <p className="text-[9px] text-stone-400 uppercase tracking-widest">Remaining</p>
         </div>
       </div>
@@ -111,7 +118,7 @@ export const PulseChat: React.FC<PulseChatProps> = ({ userMood, onExit }) => {
                 return <div key={msg.id} className="text-center my-4"><span className="text-[10px] font-bold text-stone-400 bg-stone-100 px-3 py-1 rounded-full uppercase tracking-wider">{msg.text}</span></div>;
             }
             return (
-                <div key={msg.id} className={`flex ${msg.isUser ? 'justify-end' : 'justify-start'}`}>
+                <div key={msg.id} className={`flex ${msg.isUser ? 'justify-end' : 'justify-start'} animate-appear`}>
                     {!msg.isUser && <div className="w-8 h-8 rounded-full bg-white border border-stone-100 flex items-center justify-center text-sm mr-2 shadow-sm">{msg.avatarIcon}</div>}
                     <div className={`max-w-[75%] p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm ${
                         msg.isUser 
@@ -123,6 +130,16 @@ export const PulseChat: React.FC<PulseChatProps> = ({ userMood, onExit }) => {
                 </div>
             )
         })}
+
+        {typingPeers > 0 && (
+             <div className="flex justify-start animate-fade-in">
+                 <div className="bg-white border border-stone-100 rounded-2xl rounded-tl-none p-3 ml-10 flex items-center space-x-1 shadow-sm w-12 justify-center">
+                     <div className="w-1.5 h-1.5 bg-stone-400 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+                     <div className="w-1.5 h-1.5 bg-stone-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                     <div className="w-1.5 h-1.5 bg-stone-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                 </div>
+             </div>
+        )}
       </div>
 
       {/* Input */}
