@@ -16,7 +16,7 @@ import { OneOnOneChat } from './components/OneOnOneChat';
 import { Profile } from './components/Profile';
 import { AiCompanion } from './components/AiCompanion';
 import { SocialLounge } from './components/SocialLounge';
-import { ViewState, UserProfile, CalendarEvent, Community } from './types';
+import { ViewState, UserProfile, CalendarEvent, Community, ActiveReward } from './types';
 import { MOCK_EVENTS, MOCK_COMMUNITIES } from './constants';
 
 const App: React.FC = () => {
@@ -61,7 +61,8 @@ const App: React.FC = () => {
             communitiesJoined: 1,
             sessionsCompleted: 5,
             communityPoints: 450
-        }
+        },
+        activeRewards: []
     };
     setUser(userWithStats);
     setCurrentView(ViewState.CHECK_IN);
@@ -92,6 +93,34 @@ const App: React.FC = () => {
     setUser(prev => {
         if (!prev) return null;
         const pointsEarned = Math.floor(minutes) + 10; // 1 pt per min + 10 base
+        
+        // Reward Logic based on Duration
+        let newReward: ActiveReward | null = null;
+        
+        if (minutes >= 60) {
+            newReward = {
+                id: Date.now().toString(),
+                title: "Premium Lounge Access",
+                description: "Ad-free lo-fi radio & exclusive themes unlocked.",
+                icon: "🎧",
+                unlockedAt: Date.now(),
+                expiresInHours: 72, // 3 days
+                type: 'theme'
+            };
+        } else if (minutes >= 25) {
+             newReward = {
+                id: Date.now().toString(),
+                title: "Retro Arcade Pass",
+                description: "Unlimited access to 'Distraction Pop' mini-game.",
+                icon: "🎮",
+                unlockedAt: Date.now(),
+                expiresInHours: 24, // 1 day
+                type: 'entertainment'
+            };
+        }
+
+        const updatedRewards = newReward ? [newReward, ...(prev.activeRewards || [])] : (prev.activeRewards || []);
+
         return {
             ...prev,
             stats: {
@@ -99,7 +128,8 @@ const App: React.FC = () => {
                 focusMinutes: prev.stats.focusMinutes + minutes,
                 sessionsCompleted: prev.stats.sessionsCompleted + 1,
                 communityPoints: prev.stats.communityPoints + pointsEarned
-            }
+            },
+            activeRewards: updatedRewards
         };
     });
   };

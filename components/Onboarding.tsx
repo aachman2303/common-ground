@@ -51,7 +51,8 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
         communitiesJoined: 0,
         sessionsCompleted: 0,
         communityPoints: 0
-      }
+      },
+      activeRewards: []
     });
   };
 

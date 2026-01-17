@@ -64,82 +64,87 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
 
   // Garden Logic
   const getPlantStage = () => {
-      if (stats.streakDays < 3) return { icon: '🌱', label: 'Seedling Phase', msg: "Needs consistency to grow." };
-      if (stats.streakDays < 7) return { icon: '🌿', label: 'Sprouting Phase', msg: "Growing strong!" };
-      if (stats.streakDays < 14) return { icon: '🌸', label: 'Flowering Phase', msg: "Beautiful progress." };
-      return { icon: '🌳', label: 'Thriving Phase', msg: "An ancient campus guardian." };
+      if (stats.streakDays < 3) return { icon: '🌱', label: 'Seedling', msg: "Needs consistency to grow." };
+      if (stats.streakDays < 7) return { icon: '🌿', label: 'Sprouting', msg: "Growing strong!" };
+      if (stats.streakDays < 14) return { icon: '🌸', label: 'Flowering', msg: "Beautiful progress." };
+      return { icon: '🌳', label: 'Thriving', msg: "An ancient campus guardian." };
   };
   const plant = getPlantStage();
+
+  const activeRewards = user.activeRewards || [];
 
   return (
     <div className="space-y-6 animate-slide-up pb-24 relative">
       {/* Header Card */}
-      <div className="relative overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-stone-200 border border-stone-100 group">
+      <div className="relative overflow-hidden rounded-[2.5rem] bg-white shadow-xl shadow-stone-200 border border-stone-100 group">
          {/* Decorative Background Image */}
-         <div className="absolute inset-0 h-40">
+         <div className="absolute inset-0 h-48">
              <img 
                src="https://images.unsplash.com/photo-1490750967868-58cb75069ed6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
                alt="Cozy Plant Background" 
-               className="w-full h-full object-cover opacity-90 transition-transform duration-1000 group-hover:scale-105"
+               className="w-full h-full object-cover opacity-80 transition-transform duration-1000 group-hover:scale-105"
              />
-             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/60 to-white"></div>
+             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/40 to-white"></div>
          </div>
 
-         <div className="relative pt-24 px-6 pb-8 text-center">
-             <div className="relative inline-block mb-3">
-                <div className="w-28 h-28 rounded-full bg-white border-4 border-white shadow-2xl flex items-center justify-center text-5xl animate-float relative z-10">
+         <div className="relative pt-28 px-6 pb-8 text-center">
+             <div className="relative inline-block mb-4">
+                <div className="w-32 h-32 rounded-[2rem] bg-white border-4 border-white shadow-2xl flex items-center justify-center text-6xl animate-float relative z-10 transform rotate-3">
                     {AVATARS[user.avatarId].icon}
                 </div>
-                <div className="absolute bottom-2 right-2 w-7 h-7 bg-brand-500 rounded-full border-4 border-white flex items-center justify-center text-[10px] text-white font-bold z-20 shadow-sm" title="Online">
+                <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-brand-500 rounded-full border-4 border-white flex items-center justify-center text-xs text-white font-bold z-20 shadow-md">
                     ✓
                 </div>
              </div>
              
-             <h2 className="text-3xl font-serif font-bold text-stone-800 tracking-tight">{user.nickname}</h2>
-             <p className="text-sm text-stone-400 font-mono tracking-wider mb-6 bg-stone-50 inline-block px-3 py-1 rounded-full mt-2 border border-stone-100">{user.uniqueId}</p>
+             <h2 className="text-4xl font-serif font-bold text-stone-800 tracking-tight">{user.nickname}</h2>
+             <p className="text-sm text-stone-400 font-mono tracking-wider mb-8 bg-stone-50 inline-block px-4 py-1.5 rounded-full mt-3 border border-stone-100">{user.uniqueId}</p>
              
              {/* Garden Display (Visual Streak) */}
-             <div className="bg-gradient-to-br from-brand-50 to-stone-50 rounded-2xl p-4 border border-brand-100 shadow-sm w-full relative overflow-hidden">
-                <div className="flex justify-between items-center text-sm font-bold mb-2 relative z-10">
-                    <span className="text-brand-800 flex items-center gap-2">
+             <div className="bg-gradient-to-br from-[#FDFBF7] to-white rounded-[2rem] p-6 border border-brand-100 shadow-soft w-full relative overflow-hidden group/garden">
+                <div className="flex justify-between items-center text-sm font-bold mb-4 relative z-10">
+                    <span className="text-brand-800 flex items-center gap-2 font-serif text-lg">
                         My Garden
                     </span>
-                    <span className="bg-white px-2 py-0.5 rounded-full text-[10px] text-brand-600 border border-brand-200 shadow-sm">{stats.streakDays} Day Streak</span>
+                    <span className="bg-brand-50 px-3 py-1 rounded-full text-xs text-brand-700 border border-brand-100 shadow-sm">{stats.streakDays} Day Streak</span>
                 </div>
                 <div className="flex items-center justify-between relative z-10">
                     <div className="text-left">
-                        <div className="text-4xl mb-1 filter drop-shadow-sm animate-float">{plant.icon}</div>
-                        <div className="text-xs font-bold text-stone-700">{plant.label}</div>
-                        <div className="text-[10px] text-stone-400 italic">"{plant.msg}"</div>
+                        <div className="text-6xl mb-2 filter drop-shadow-md animate-float transition-transform group-hover/garden:scale-110">{plant.icon}</div>
+                        <div className="text-sm font-bold text-stone-700">{plant.label} Phase</div>
+                        <div className="text-xs text-stone-400 italic mt-0.5">"{plant.msg}"</div>
                     </div>
                     
                     {/* Progress Circle for Next Stage */}
-                    <div className="relative w-16 h-16 flex items-center justify-center">
+                    <div className="relative w-20 h-20 flex items-center justify-center">
                         <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                            <path className="text-brand-100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="4" />
-                            <path className="text-brand-500" strokeDasharray={`${Math.min(100, (stats.streakDays / 14) * 100)}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                            <path className="text-stone-100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" />
+                            <path className="text-brand-400" strokeDasharray={`${Math.min(100, (stats.streakDays / 14) * 100)}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
                         </svg>
-                        <span className="absolute text-[10px] font-bold text-brand-700">Level {Math.floor(stats.streakDays / 3) + 1}</span>
+                        <div className="absolute text-center">
+                             <span className="block text-[8px] font-bold text-stone-400 uppercase tracking-widest">Level</span>
+                             <span className="block text-xl font-serif font-bold text-brand-700 leading-none">{Math.floor(stats.streakDays / 3) + 1}</span>
+                        </div>
                     </div>
                 </div>
                 
                 {/* Decorative background elements */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-brand-100/50 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                <div className="absolute top-0 right-0 w-40 h-40 bg-brand-50/50 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
              </div>
          </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex bg-stone-200/50 p-1.5 rounded-2xl backdrop-blur-sm">
+      <div className="flex bg-white/50 p-1.5 rounded-[1.5rem] backdrop-blur-sm border border-white shadow-sm">
           <button 
              onClick={() => setActiveTab('stats')}
-             className={`flex-1 py-3 text-xs font-bold rounded-xl transition-all duration-300 ${activeTab === 'stats' ? 'bg-white text-stone-800 shadow-md transform scale-100' : 'text-stone-500 hover:text-stone-600 scale-95'}`}
+             className={`flex-1 py-3 text-xs font-bold rounded-2xl transition-all duration-300 ${activeTab === 'stats' ? 'bg-white text-stone-800 shadow-sm transform scale-100' : 'text-stone-400 hover:text-stone-600 scale-95'}`}
           >
-              Journey & Badges
+              Journey
           </button>
           <button 
              onClick={() => setActiveTab('settings')}
-             className={`flex-1 py-3 text-xs font-bold rounded-xl transition-all duration-300 ${activeTab === 'settings' ? 'bg-white text-stone-800 shadow-md transform scale-100' : 'text-stone-500 hover:text-stone-600 scale-95'}`}
+             className={`flex-1 py-3 text-xs font-bold rounded-2xl transition-all duration-300 ${activeTab === 'settings' ? 'bg-white text-stone-800 shadow-sm transform scale-100' : 'text-stone-400 hover:text-stone-600 scale-95'}`}
           >
               Settings
           </button>
@@ -147,16 +152,41 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
 
       {activeTab === 'stats' && (
           <div className="space-y-6 animate-fade-in">
+              {/* Active Rewards Section */}
+              {activeRewards.length > 0 && (
+                  <div>
+                    <h3 className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-3 px-2">Active Perks</h3>
+                    <div className="space-y-3">
+                        {activeRewards.map(reward => (
+                            <div key={reward.id} className="bg-gradient-to-r from-indigo-50 to-purple-50 p-5 rounded-[2rem] border border-indigo-100 shadow-sm flex items-start space-x-5 relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-100/50 rounded-full -mr-10 -mt-10 blur-2xl"></div>
+                                <div className="text-3xl bg-white w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm relative z-10 group-hover:scale-110 transition-transform">
+                                    {reward.icon}
+                                </div>
+                                <div className="flex-1 relative z-10">
+                                    <h4 className="font-bold text-indigo-900 text-sm font-serif">{reward.title}</h4>
+                                    <p className="text-xs text-indigo-700/70 mt-1 leading-relaxed">{reward.description}</p>
+                                    <div className="mt-2 inline-flex items-center space-x-1 text-[10px] font-bold text-indigo-600 bg-white/60 px-2 py-0.5 rounded-lg border border-indigo-100">
+                                        <span>⏳</span>
+                                        <span>Expires in {reward.expiresInHours}h</span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                  </div>
+              )}
+
               {/* Stats Grid */}
               <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white p-5 rounded-2xl border border-stone-100 shadow-sm hover:shadow-md transition-all group">
-                      <div className="w-10 h-10 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">⏳</div>
-                      <div className="text-2xl font-bold text-stone-800 font-serif">{(currentMinutes / 60).toFixed(1)}h</div>
+                  <div className="bg-white p-6 rounded-[2rem] border border-stone-100 shadow-soft hover:shadow-lg transition-all group">
+                      <div className="w-12 h-12 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform shadow-inner">⏳</div>
+                      <div className="text-3xl font-bold text-stone-800 font-serif">{(currentMinutes / 60).toFixed(1)}<span className="text-lg">h</span></div>
                       <div className="text-[10px] text-stone-400 uppercase tracking-widest font-bold mt-1">Focus Time</div>
                   </div>
-                  <div className="bg-white p-5 rounded-2xl border border-stone-100 shadow-sm hover:shadow-md transition-all group">
-                      <div className="w-10 h-10 rounded-full bg-yellow-50 text-yellow-600 flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">✨</div>
-                      <div className="text-2xl font-bold text-stone-800 font-serif">{user.stats?.communityPoints || 0}</div>
+                  <div className="bg-white p-6 rounded-[2rem] border border-stone-100 shadow-soft hover:shadow-lg transition-all group">
+                      <div className="w-12 h-12 rounded-2xl bg-yellow-50 text-yellow-600 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform shadow-inner">✨</div>
+                      <div className="text-3xl font-bold text-stone-800 font-serif">{user.stats?.communityPoints || 0}</div>
                       <div className="text-[10px] text-stone-400 uppercase tracking-widest font-bold mt-1">Karma Points</div>
                   </div>
               </div>
@@ -165,7 +195,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
               <div>
                   <div className="flex items-center justify-between px-2 mb-3">
                       <h3 className="text-xs font-bold text-stone-400 uppercase tracking-widest">Achievements</h3>
-                      <span className="text-[10px] bg-stone-100 text-stone-500 px-2 py-0.5 rounded-full font-bold">
+                      <span className="text-[10px] bg-stone-200 text-stone-500 px-2.5 py-0.5 rounded-full font-bold">
                           {ALL_BADGES.filter(b => b.unlocked).length}/{ALL_BADGES.length}
                       </span>
                   </div>
@@ -173,7 +203,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
                       {ALL_BADGES.map((badge, i) => (
                           <div 
                             key={badge.id} 
-                            className={`flex flex-col items-center p-4 rounded-2xl border transition-all duration-500 relative overflow-hidden ${
+                            className={`flex flex-col items-center p-4 rounded-[1.5rem] border transition-all duration-500 relative overflow-hidden ${
                                 badge.unlocked 
                                     ? 'bg-white border-brand-100 shadow-sm hover:shadow-md hover:-translate-y-1' 
                                     : 'bg-stone-50 border-stone-100 opacity-60 grayscale'
@@ -184,7 +214,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
                               
                               <div className="text-3xl mb-2 filter drop-shadow-sm">{badge.icon}</div>
                               <span className="text-[10px] font-bold text-stone-800 text-center leading-tight mb-1">{badge.label}</span>
-                              <span className="text-[8px] text-stone-400 text-center">{badge.desc}</span>
+                              <span className="text-[8px] text-stone-400 text-center leading-tight">{badge.desc}</span>
                               
                               {!badge.unlocked && (
                                   <div className="absolute top-2 right-2 text-[10px]">🔒</div>
@@ -201,14 +231,14 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
                       <p className="font-serif italic text-xl leading-relaxed opacity-90">
                           "Growth is not a race, it's a rhythm. Find yours."
                       </p>
-                      <div className="w-12 h-1 bg-brand-500/50 mx-auto mt-4 rounded-full"></div>
+                      <div className="w-12 h-1 bg-brand-500/50 mx-auto mt-6 rounded-full"></div>
                   </div>
               </div>
           </div>
       )}
 
       {activeTab === 'settings' && (
-          <div className="bg-white rounded-3xl border border-stone-100 shadow-sm overflow-hidden animate-fade-in divide-y divide-stone-50">
+          <div className="bg-white rounded-[2rem] border border-stone-100 shadow-soft overflow-hidden animate-fade-in divide-y divide-stone-50">
               {[
                   { label: 'Notifications', type: 'toggle', active: true },
                   { label: 'Incognito Mode', type: 'toggle', active: false },
@@ -218,8 +248,8 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
                 <div key={idx} className="p-5 flex justify-between items-center hover:bg-stone-50 transition-colors cursor-pointer group">
                     <span className="text-sm font-bold text-stone-600 group-hover:text-stone-900 transition-colors">{item.label}</span>
                     {item.type === 'toggle' ? (
-                        <div className={`w-11 h-6 rounded-full relative transition-colors ${item.active ? 'bg-brand-500' : 'bg-stone-200'}`}>
-                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all ${item.active ? 'left-6' : 'left-1'}`}></div>
+                        <div className={`w-12 h-7 rounded-full relative transition-colors ${item.active ? 'bg-brand-500' : 'bg-stone-200'}`}>
+                            <div className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow-sm transition-all ${item.active ? 'left-6' : 'left-1'}`}></div>
                         </div>
                     ) : (
                         <span className="text-stone-300 group-hover:text-brand-500 transition-colors">→</span>

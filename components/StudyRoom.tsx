@@ -16,10 +16,19 @@ const AMBIENT_SOUNDS = [
 ];
 
 const VIBES = [
-    { id: 'default', label: 'Clean', color: 'bg-white' },
-    { id: 'lofi', label: 'Lo-Fi', color: 'bg-purple-50/50' },
-    { id: 'dark', label: 'Night', color: 'bg-stone-800 text-white' },
-    { id: 'nature', label: 'Nature', color: 'bg-green-50/50' }
+    { id: 'default', label: 'Clean', color: 'bg-[#FDFBF7]', text: 'text-stone-800' },
+    { id: 'lofi', label: 'Lo-Fi', color: 'bg-purple-50', text: 'text-purple-900' },
+    { id: 'dark', label: 'Night', color: 'bg-stone-900', text: 'text-stone-100' },
+    { id: 'nature', label: 'Nature', color: 'bg-green-50', text: 'text-green-900' }
+];
+
+// Mini Game Constants
+const GAME_ICONS = [
+    { type: 'distraction', icon: '📱', points: 10 },
+    { type: 'distraction', icon: '🎮', points: 10 },
+    { type: 'distraction', icon: '🛌', points: 10 },
+    { type: 'focus', icon: '📚', points: -5 },
+    { type: 'focus', icon: '💧', points: -5 },
 ];
 
 export const StudyRoom: React.FC<StudyRoomProps> = ({ user, onSessionComplete }) => {
@@ -33,25 +42,20 @@ export const StudyRoom: React.FC<StudyRoomProps> = ({ user, onSessionComplete })
   const [activeSoundId, setActiveSoundId] = useState<string | null>(null);
   const [isPlayingSound, setIsPlayingSound] = useState(false);
   const [volume, setVolume] = useState(0.5);
-  const [selectedBadge, setSelectedBadge] = useState<string | null>(null);
   const [sessionCompleted, setSessionCompleted] = useState(false);
   const [currentVibe, setCurrentVibe] = useState('default');
+  
+  // Game State
+  const [showGame, setShowGame] = useState(false);
+  const [gameScore, setGameScore] = useState(0);
+  const [floatingItems, setFloatingItems] = useState<{id: number, icon: string, type: string, x: number, y: number}[]>([]);
+  const gameIntervalRef = useRef<any>(null);
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Stats for badges
-  const stats = user?.stats || { focusMinutes: 0, streakDays: 0, communitiesJoined: 0, sessionsCompleted: 0 };
-
-  const ACHIEVEMENTS = [
-    { id: '1', icon: '🌙', label: 'Late-night Scholar', desc: 'Focus session past midnight', unlocked: stats.sessionsCompleted >= 5 },
-    { id: '2', icon: '👥', label: 'Community Pillar', desc: 'Studied with 100 peers', unlocked: stats.communitiesJoined >= 5 },
-    { id: '3', icon: '🔥', label: 'Deep Work', desc: '2 hour continuous streak', unlocked: stats.focusMinutes >= 120 },
-    { id: '4', icon: '🧘', label: 'Zen Master', desc: 'Completed 50 sessions', unlocked: stats.sessionsCompleted >= 50 },
-    { id: '5', icon: '🌱', label: 'Early Bird', desc: 'Session before 8 AM', unlocked: false },
-  ];
-
   // Timer Ring Calculations
-  const size = 260;
-  const strokeWidth = 12;
+  const size = 280;
+  const strokeWidth = 16;
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const progress = timeLeft / initialTime;
@@ -71,12 +75,50 @@ export const StudyRoom: React.FC<StudyRoomProps> = ({ user, onSessionComplete })
     return () => clearInterval(interval);
   }, [isActive, timeLeft, initialTime, onSessionComplete]);
 
+  // Game Logic
+  const startGame = () => {
+      setShowGame(true);
+      setGameScore(0);
+      setFloatingItems([]);
+      
+      gameIntervalRef.current = setInterval(() => {
+          if (Math.random() > 0.3) {
+             const itemType = GAME_ICONS[Math.floor(Math.random() * GAME_ICONS.length)];
+             const newItem = {
+                 id: Date.now(),
+                 icon: itemType.icon,
+                 type: itemType.type,
+                 x: Math.random() * 80 + 10, 
+                 y: 100 
+             };
+             setFloatingItems(prev => [...prev, newItem]);
+          }
+          
+          setFloatingItems(prev => prev.map(item => ({...item, y: item.y - 2})).filter(item => item.y > -10));
+      }, 100);
+  };
+
+  const stopGame = () => {
+      clearInterval(gameIntervalRef.current);
+      setShowGame(false);
+  };
+
+  const handleGameClick = (id: number, type: string) => {
+      if (type === 'distraction') {
+          setGameScore(prev => prev + 10);
+      } else {
+          setGameScore(prev => Math.max(0, prev - 5));
+      }
+      setFloatingItems(prev => prev.filter(item => item.id !== id));
+  };
+
   useEffect(() => {
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
       }
+      clearInterval(gameIntervalRef.current);
     };
   }, []);
 
@@ -98,7 +140,14 @@ export const StudyRoom: React.FC<StudyRoomProps> = ({ user, onSessionComplete })
     setTimeLeft(initialTime);
   };
 
-  const toggleTimer = () => setIsActive(!isActive);
+  const toggleTimer = () => {
+      if (isActive) {
+          setIsActive(false);
+      } else {
+          setIsActive(true);
+          setShowGame(false);
+      }
+  };
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -163,49 +212,96 @@ export const StudyRoom: React.FC<StudyRoomProps> = ({ user, onSessionComplete })
   const activeVibeObj = VIBES.find(v => v.id === currentVibe) || VIBES[0];
   const isDarkMode = currentVibe === 'dark';
 
+  const getRewardPreview = () => {
+      const minutes = initialTime / 60;
+      if (minutes >= 60) return { icon: "🎧", label: "Premium Theme Pack" };
+      if (minutes >= 30) return { icon: "🎮", label: "Retro Arcade Game" };
+      return { icon: "⭐️", label: "Karma Points Only" };
+  };
+  const rewardPreview = getRewardPreview();
+
   return (
-    <div className={`space-y-6 flex flex-col min-h-full animate-appear relative transition-colors duration-500 rounded-3xl p-4 ${activeVibeObj.color}`}>
+    <div className={`flex flex-col min-h-full animate-appear relative transition-colors duration-700 rounded-[2.5rem] p-6 shadow-inner ${activeVibeObj.color}`}>
       
+      {/* GAME OVERLAY */}
+      {showGame && (
+          <div className="absolute inset-0 z-40 bg-slate-900/95 rounded-[2.5rem] overflow-hidden flex flex-col items-center justify-center">
+              <div className="absolute top-6 right-6 text-white font-bold text-2xl font-mono">Score: {gameScore}</div>
+              <div className="absolute top-6 left-6">
+                  <button onClick={stopGame} className="text-white text-xs bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full font-bold transition-colors">Exit Game</button>
+              </div>
+              
+              <div className="text-center mb-10 pointer-events-none">
+                  <h3 className="text-3xl font-serif font-bold text-white mb-2">Pop the Distractions!</h3>
+                  <p className="text-white/60 text-sm">Don't pop the books!</p>
+              </div>
+
+              {floatingItems.map(item => (
+                  <button
+                    key={item.id}
+                    onClick={() => handleGameClick(item.id, item.type)}
+                    className="absolute text-5xl animate-pop transition-transform hover:scale-110 active:scale-90"
+                    style={{ left: `${item.x}%`, top: `${item.y}%` }}
+                  >
+                      {item.icon}
+                  </button>
+              ))}
+          </div>
+      )}
+
       {/* Session Completed Overlay */}
       {sessionCompleted && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm rounded-3xl animate-fade-in">
-           <div className="bg-white p-8 rounded-3xl shadow-2xl border border-brand-100 text-center max-w-xs mx-4 animate-pop">
-              <div className="text-5xl mb-4">🎉</div>
-              <h3 className="text-2xl font-serif font-bold text-brand-800 mb-2">Session Complete!</h3>
-              <p className="text-stone-600 mb-4">
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-md rounded-[2.5rem] animate-fade-in p-6">
+           <div className="bg-white p-8 rounded-[2rem] shadow-2xl border border-brand-100 text-center w-full max-w-xs animate-pop">
+              <div className="text-6xl mb-6">🎉</div>
+              <h3 className="text-3xl font-serif font-bold text-brand-800 mb-3">Session Complete!</h3>
+              <p className="text-stone-600 mb-6 font-medium">
                 You focused for <span className="font-bold text-brand-600">{initialTime / 60} minutes</span>.
               </p>
-              <div className="bg-brand-50 p-3 rounded-xl mb-6 border border-brand-100">
-                 <p className="text-xs text-brand-500 font-bold uppercase tracking-wider">Rewards</p>
-                 <p className="font-bold text-brand-700 text-lg">+{Math.floor(initialTime / 60) + 10} Points</p>
-              </div>
+              
+              {initialTime / 60 >= 25 ? (
+                  <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-5 rounded-2xl mb-6 border border-indigo-100 relative overflow-hidden group hover:shadow-md transition-all">
+                     <div className="absolute -top-4 -right-4 text-6xl opacity-10 group-hover:scale-110 transition-transform">🎁</div>
+                     <p className="text-xs text-indigo-500 font-bold uppercase tracking-wider mb-2">Reward Unlocked</p>
+                     <div className="flex items-center justify-center space-x-3 mb-2">
+                         <span className="text-3xl">{getRewardPreview().icon}</span>
+                         <span className="font-bold text-indigo-900 text-lg">{getRewardPreview().label}</span>
+                     </div>
+                  </div>
+              ) : (
+                  <div className="bg-brand-50 p-4 rounded-2xl mb-6 border border-brand-100">
+                     <p className="text-xs text-brand-500 font-bold uppercase tracking-wider mb-1">Rewards</p>
+                     <p className="font-bold text-brand-800 text-lg">+{Math.floor(initialTime / 60) + 10} Karma Points</p>
+                  </div>
+              )}
+
               <button 
                 onClick={() => {
                   setSessionCompleted(false);
                   resetTimer();
                 }}
-                className="w-full py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 transition-colors shadow-lg shadow-brand-200"
+                className="w-full py-4 bg-brand-600 text-white rounded-2xl font-bold hover:bg-brand-700 transition-colors shadow-lg shadow-brand-200"
               >
-                Continue
+                Claim & Continue
               </button>
            </div>
         </div>
       )}
 
       {/* Header & Vibe Check */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center mb-6">
          <div>
-            <h2 className={`text-lg font-serif font-bold ${isDarkMode ? 'text-white' : 'text-stone-700'}`}>Sanctuary</h2>
-            <div className={`text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-stone-400' : 'text-stone-400'}`}>
+            <h2 className={`text-2xl font-serif font-bold tracking-tight ${activeVibeObj.text}`}>Sanctuary</h2>
+            <div className={`text-[10px] font-bold uppercase tracking-widest opacity-60 ${activeVibeObj.text}`}>
                 Focus Mode
             </div>
          </div>
-         <div className="flex space-x-1 bg-black/5 p-1 rounded-full">
+         <div className={`flex space-x-1 p-1.5 rounded-full ${isDarkMode ? 'bg-white/10' : 'bg-stone-100'}`}>
             {VIBES.map(v => (
                 <button 
                     key={v.id}
                     onClick={() => setCurrentVibe(v.id)}
-                    className={`w-6 h-6 rounded-full text-[10px] flex items-center justify-center transition-all ${currentVibe === v.id ? 'bg-white shadow-sm scale-110 text-stone-800' : 'text-transparent hover:bg-white/50'}`}
+                    className={`w-8 h-8 rounded-full text-sm flex items-center justify-center transition-all ${currentVibe === v.id ? 'bg-white shadow-md scale-110 text-stone-800' : 'text-transparent hover:bg-white/20'}`}
                     title={v.label}
                 >
                     {v.id === 'default' ? '☀️' : v.id === 'lofi' ? '🟣' : v.id === 'dark' ? '🌙' : '🌿'}
@@ -214,77 +310,49 @@ export const StudyRoom: React.FC<StudyRoomProps> = ({ user, onSessionComplete })
          </div>
       </div>
 
-      {/* Roulette */}
-      <div className={`min-h-[140px] backdrop-blur rounded-3xl p-4 flex items-center justify-center border shadow-soft relative overflow-hidden transition-all duration-500 ${isDarkMode ? 'bg-white/10 border-white/10' : 'bg-white/60 border-white'}`}>
-        {rouletteMode === 'idle' && (
-           <div className="flex flex-col items-center space-y-4 animate-fade-in">
-             <div className="flex -space-x-4 items-end justify-center h-14">
-                {AVATARS.map((avatar, i) => (
-                  <div 
-                    key={i} 
-                    className={`w-12 h-12 rounded-full border-2 border-white flex items-center justify-center text-xl shadow-md animate-float ${avatar.color}`}
-                    style={{ 
-                        animationDelay: `${i * 0.3}s`,
-                        zIndex: 10 - i 
-                    }}
-                  >
-                    {avatar.icon}
-                  </div>
-                ))}
+      {/* Roulette / Game Invite */}
+      {!isActive && !showGame && (
+         <div className={`mb-6 backdrop-blur-md rounded-2xl p-4 flex items-center justify-center border shadow-sm relative overflow-hidden transition-all duration-500 ${isDarkMode ? 'bg-white/5 border-white/5' : 'bg-white/60 border-white'}`}>
+             <div className="flex space-x-3">
+                 <button onClick={startRoulette} className="bg-brand-50 text-brand-800 px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-brand-100 transition-colors shadow-sm">
+                     Study Roulette 🎲
+                 </button>
+                 <button onClick={startGame} className="bg-orange-50 text-orange-800 px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-orange-100 transition-colors shadow-sm">
+                     Pop Distractions 🎮
+                 </button>
              </div>
-             <button onClick={startRoulette} className="text-xs font-bold text-brand-600 bg-brand-50 px-6 py-3 rounded-xl hover:bg-brand-100 transition-colors shadow-sm">
-                Study Buddy Roulette (30m)
-             </button>
+         </div>
+      )}
+      
+      {/* Active Roulette Status */}
+      {rouletteMode === 'searching' && (
+          <div className="text-center animate-pulse py-4">
+               <div className="text-xs font-bold text-brand-500 uppercase tracking-widest">Finding partner...</div>
           </div>
-        )}
-        {rouletteMode === 'searching' && (
-            <div className="text-center animate-pulse">
-                <div className="w-12 h-12 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin mx-auto mb-3"></div>
-                <p className="text-xs font-bold text-brand-700 uppercase tracking-widest">Finding a partner...</p>
-            </div>
-        )}
-        {rouletteMode === 'matched' && buddy && (
-            <div className="flex items-center space-x-4 animate-pop">
-                 <div className="text-center">
-                    <div className="w-16 h-16 rounded-full bg-white border-4 border-brand-200 flex items-center justify-center text-xs font-bold text-brand-600 shadow-md animate-float" style={{ animationDelay: '0s' }}>
-                        YOU
-                    </div>
-                 </div>
-                 <div className="flex flex-col items-center space-y-1">
-                    <div className="h-0.5 w-8 bg-brand-200"></div>
-                    <span className="text-[10px] font-bold text-brand-400">CONNECTED</span>
-                 </div>
-                 <div className="text-center">
-                    <div 
-                        className={`w-16 h-16 rounded-full border-4 ${buddy.border} ${buddy.color} flex items-center justify-center text-3xl shadow-md animate-float`}
-                        style={{ animationDelay: '1s' }}
-                    >
-                        {buddy.icon}
-                    </div>
-                    <p className="text-[10px] font-bold mt-2 text-stone-500 bg-white/80 px-2 py-0.5 rounded-full shadow-sm">{buddy.subject}</p>
-                 </div>
-            </div>
-        )}
-      </div>
+      )}
+      {rouletteMode === 'matched' && buddy && (
+         <div className="flex justify-center items-center space-x-3 py-4 animate-pop bg-white/10 rounded-2xl mb-4 border border-white/20">
+             <span className={`text-xs font-bold ${activeVibeObj.text}`}>Studying with</span>
+             <div className={`w-8 h-8 rounded-full border-2 ${buddy.border} ${buddy.color} flex items-center justify-center`}>{buddy.icon}</div>
+         </div>
+      )}
 
       {/* Timer with SVG Progress Ring */}
-      <div className="flex-1 flex flex-col items-center justify-center py-4">
+      <div className="flex-1 flex flex-col items-center justify-center py-2">
         <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
           
           {/* SVG Ring */}
           <svg width={size} height={size} className="absolute transform -rotate-90">
-             {/* Background Circle */}
              <circle
-                stroke={isDarkMode ? '#44403c' : '#e7e5e4'} 
+                stroke={isDarkMode ? 'rgba(255,255,255,0.1)' : '#e5e7eb'} 
                 strokeWidth={strokeWidth}
                 fill="transparent"
                 r={radius}
                 cx={size / 2}
                 cy={size / 2}
              />
-             {/* Progress Circle */}
              <circle
-                stroke="#588173" // brand-500
+                stroke="#5F8174" // brand-500
                 strokeWidth={strokeWidth}
                 strokeDasharray={circumference}
                 strokeDashoffset={strokeDashoffset}
@@ -298,36 +366,34 @@ export const StudyRoom: React.FC<StudyRoomProps> = ({ user, onSessionComplete })
           </svg>
           
           {/* Center Content */}
-          <div className={`flex flex-col items-center z-10 w-48 h-48 rounded-full justify-center shadow-soft border ${isDarkMode ? 'bg-stone-900 border-stone-700 text-white' : 'bg-white border-stone-50'}`}>
-            <span className={`text-5xl font-serif font-bold tracking-tight font-variant-numeric tabular-nums ${isDarkMode ? 'text-white' : 'text-brand-800'}`}>
+          <div className={`flex flex-col items-center z-10 w-52 h-52 rounded-full justify-center shadow-[inset_0_2px_15px_rgba(0,0,0,0.05)] border-4 ${isDarkMode ? 'bg-stone-800 border-stone-700' : 'bg-white border-stone-50'}`}>
+            <span className={`text-6xl font-serif font-bold tracking-tighter font-variant-numeric tabular-nums ${activeVibeObj.text}`}>
               {formatTime(timeLeft)}
             </span>
-            <span className="text-xs text-brand-400 font-bold uppercase tracking-widest mt-1">
+            <span className={`text-xs font-bold uppercase tracking-widest mt-2 ${isDarkMode ? 'text-stone-400' : 'text-brand-400'}`}>
                 {isActive ? 'Flowing' : 'Paused'}
             </span>
-             <button 
-                onClick={resetTimer}
-                disabled={timeLeft === initialTime && !isActive}
-                className={`mt-2 text-[10px] uppercase font-bold tracking-wider transition-all duration-300 ${
-                  timeLeft !== initialTime || isActive 
-                    ? 'text-red-400 hover:text-red-600 cursor-pointer' 
-                    : 'text-transparent cursor-default'
-                }`}
-            >
-                Reset
-            </button>
+             
+             {/* Reward Hint */}
+             {!isActive && (
+                 <div className="mt-3 flex items-center space-x-1.5 text-[10px] font-bold text-stone-500 bg-stone-100 px-3 py-1 rounded-full border border-stone-200">
+                     <span>🔒</span>
+                     <span>{rewardPreview.label}</span>
+                 </div>
+             )}
           </div>
         </div>
 
-        <div className="flex items-center space-x-3 mt-8">
+        {/* Duration Selectors */}
+        <div className="flex items-center space-x-4 mt-8">
             {[25, 30, 45, 60].map((mins) => (
                 <button
                     key={mins}
                     onClick={() => changeDuration(mins)}
-                    className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xs font-bold transition-all ${
+                    className={`w-14 h-14 rounded-2xl flex items-center justify-center text-sm font-bold transition-all ${
                         initialTime === mins * 60
                         ? 'bg-brand-600 text-white shadow-lg shadow-brand-200 transform scale-110'
-                        : isDarkMode ? 'bg-stone-800 text-stone-400 hover:bg-stone-700' : 'bg-white text-stone-400 hover:bg-stone-50'
+                        : isDarkMode ? 'bg-white/10 text-stone-300 hover:bg-white/20' : 'bg-white text-stone-400 hover:bg-stone-50 border border-stone-100'
                     }`}
                 >
                     {mins}
@@ -337,14 +403,14 @@ export const StudyRoom: React.FC<StudyRoomProps> = ({ user, onSessionComplete })
       </div>
 
       {/* Motivation */}
-      <div className="min-h-[40px] text-center px-6">
+      <div className="min-h-[50px] text-center px-4 flex items-center justify-center">
          {motivation ? (
-           <p className={`text-sm font-serif italic animate-fade-in ${isDarkMode ? 'text-stone-300' : 'text-stone-600'}`}>"{motivation}"</p>
+           <p className={`text-sm font-serif italic animate-fade-in ${activeVibeObj.text} opacity-80`}>"{motivation}"</p>
          ) : (
            <button 
             onClick={handleGetMotivation}
             disabled={loadingQuote}
-            className="text-xs text-brand-400 font-bold uppercase tracking-widest hover:text-brand-600 transition-colors"
+            className={`text-xs font-bold uppercase tracking-widest transition-colors opacity-50 hover:opacity-100 ${activeVibeObj.text}`}
            >
              {loadingQuote ? "Whispering..." : "Need encouragement?"}
            </button>
@@ -352,14 +418,14 @@ export const StudyRoom: React.FC<StudyRoomProps> = ({ user, onSessionComplete })
       </div>
 
       {/* Sounds */}
-      <div className={`p-5 rounded-3xl shadow-soft space-y-4 ${isDarkMode ? 'bg-stone-800' : 'bg-white'}`}>
-        <div className="flex justify-between items-center px-1">
-           <h3 className="text-xs font-bold text-stone-400 uppercase tracking-widest">Ambiance</h3>
+      <div className={`p-5 rounded-[2rem] shadow-sm space-y-3 transition-colors ${isDarkMode ? 'bg-white/5 border border-white/5' : 'bg-white border border-stone-100'}`}>
+        <div className="flex justify-between items-center px-2">
+           <h3 className={`text-[10px] font-bold uppercase tracking-widest opacity-60 ${activeVibeObj.text}`}>Ambiance</h3>
            {activeSoundId && (
              <input 
                  type="range" min="0" max="1" step="0.05" value={volume} 
                  onChange={(e) => setVolume(parseFloat(e.target.value))}
-                 className="w-20 h-1 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-brand-500"
+                 className="w-24 h-1 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-brand-500"
                />
            )}
         </div>
@@ -370,14 +436,14 @@ export const StudyRoom: React.FC<StudyRoomProps> = ({ user, onSessionComplete })
               <button
                 key={sound.id}
                 onClick={() => toggleSound(sound)}
-                className={`flex-1 py-4 rounded-2xl transition-all duration-300 flex flex-col items-center justify-center space-y-1 ${
+                className={`flex-1 py-3 rounded-2xl transition-all duration-300 flex flex-col items-center justify-center space-y-1 ${
                   isActive 
-                    ? 'bg-brand-50 text-brand-800 ring-2 ring-brand-100 shadow-inner' 
-                    : isDarkMode ? 'bg-stone-700 text-stone-400 hover:bg-stone-600' : 'bg-stone-50 text-stone-400 hover:bg-stone-100'
+                    ? 'bg-brand-50 text-brand-800 ring-1 ring-brand-200 shadow-inner' 
+                    : isDarkMode ? 'bg-white/5 text-stone-400 hover:bg-white/10' : 'bg-stone-50 text-stone-400 hover:bg-stone-100'
                 }`}
               >
                 <span className={`text-xl ${isActive && isPlayingSound ? 'animate-pulse' : ''}`}>{sound.icon}</span>
-                <span className="text-[10px] font-bold">{sound.label}</span>
+                <span className="text-[9px] font-bold">{sound.label}</span>
               </button>
             );
           })}
@@ -385,13 +451,13 @@ export const StudyRoom: React.FC<StudyRoomProps> = ({ user, onSessionComplete })
       </div>
 
       {/* Main Action */}
-      <div className="flex space-x-4">
+      <div className="flex space-x-4 mt-2">
         <button 
           onClick={toggleTimer}
-          className={`flex-1 py-4 rounded-2xl font-bold shadow-lg transition-all active:scale-95 ${
+          className={`flex-1 py-4 rounded-2xl font-bold text-lg shadow-xl transition-all active:scale-95 ${
             isActive 
-              ? 'bg-calm-yellow text-white shadow-yellow-200/50' 
-              : 'bg-brand-600 text-white shadow-brand-200/50 hover:bg-brand-700'
+              ? 'bg-amber-200 text-amber-900 shadow-amber-100/50 hover:bg-amber-300' 
+              : 'bg-stone-800 text-white shadow-stone-400/30 hover:bg-black'
           }`}
         >
           {isActive ? 'Pause' : 'Begin Focus'}
@@ -402,7 +468,7 @@ export const StudyRoom: React.FC<StudyRoomProps> = ({ user, onSessionComplete })
                 setBuddy(null);
                 setIsActive(false);
             }}
-            className={`w-14 flex items-center justify-center rounded-2xl transition-colors shadow-sm ${isDarkMode ? 'bg-stone-800 text-stone-400 hover:text-red-400' : 'bg-white text-stone-400 hover:text-red-400'}`}
+            className={`w-16 flex items-center justify-center rounded-2xl transition-colors shadow-sm ${isDarkMode ? 'bg-white/10 text-stone-400 hover:text-red-400' : 'bg-white text-stone-400 hover:text-red-400 border border-stone-100'}`}
         >
           ✕
         </button>

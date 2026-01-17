@@ -23,6 +23,16 @@ export interface UserStats {
   communityPoints: number; // New metric
 }
 
+export interface ActiveReward {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  unlockedAt: number; // Timestamp
+  expiresInHours: number;
+  type: 'entertainment' | 'theme' | 'feature';
+}
+
 export interface UserProfile {
   email: string;
   nickname: string;
@@ -30,6 +40,7 @@ export interface UserProfile {
   location: { lat: number; lng: number } | null;
   uniqueId: string;
   stats: UserStats;
+  activeRewards: ActiveReward[];
 }
 
 export interface Community {

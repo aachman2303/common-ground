@@ -32,7 +32,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSwitchToSignup }) => {
                 communitiesJoined: 2,
                 sessionsCompleted: 12,
                 communityPoints: 350
-            }
+            },
+            activeRewards: []
         };
         onLogin(mockUser);
         setIsLoading(false);
@@ -48,7 +49,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSwitchToSignup }) => {
         avatarId: 1,
         uniqueId: '#GGL24',
         location: null,
-        stats: { focusMinutes: 0, streakDays: 0, communitiesJoined: 0, sessionsCompleted: 0, communityPoints: 0 }
+        stats: { focusMinutes: 0, streakDays: 0, communitiesJoined: 0, sessionsCompleted: 0, communityPoints: 0 },
+        activeRewards: []
       };
       onLogin(googleUser);
       setIsLoading(false);
